@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Link Preview Test</title>
+    <link rel="stylesheet" href="stylesheets/style.css">
+</head>
+<body>
+<h1>Link Preview Test</h1>
+
+<form id="form">
+    <input type="text" id="url" placeholder="Введите ссылку" size="50" />
+    <button type="submit">Получить предпросмотр</button>
+</form>
+
+<div id="result"></div>
+
+<script>
+    const form = document.getElementById("form");
+    const result = document.getElementById("result");
+
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        result.innerHTML = "Загрузка...";
+        const url = document.getElementById("url").value;
+
+        try {
+            const resp = await fetch(`/api/parse?url=${encodeURIComponent(url)}`);
+            const data = await resp.json();
+
+            result.innerHTML = `
+          <div class="preview-card">
+            ${data.image ? `<div class="preview-image-wrapper"><img src="${data.image}" alt="poster"></div>` : ""}
+            <div class="preview-content">
+              <a class="preview-title" href="${data.url}" target="_blank">${data.title || "Без заголовка"}</a>
+              <p class="preview-description">${data.description || ""}</p>
+            </div>
+          </div>
+        `;
+        } catch (err) {
+            result.innerHTML = "<p>Ошибка при парсинге</p>";
+        }
+    });
+</script>
+</body>
+</html>

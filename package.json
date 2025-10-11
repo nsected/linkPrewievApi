@@ -1,0 +1,29 @@
+{
+  "name": "linkprewiev",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node ./app.js"
+  },
+  "dependencies": {
+    "cheerio": "^1.1.2",
+    "cookie-parser": "~1.4.4",
+    "debug": "~2.6.9",
+    "express": "~4.16.1",
+    "got": "^14.4.9",
+    "http-errors": "~1.6.3",
+    "metascraper": "^5.49.4",
+    "metascraper-author": "^5.49.2",
+    "metascraper-date": "^5.49.2",
+    "metascraper-description": "^5.49.2",
+    "metascraper-image": "^5.49.2",
+    "metascraper-logo": "^5.49.2",
+    "metascraper-publisher": "^5.49.2",
+    "metascraper-title": "^5.49.2",
+    "metascraper-url": "^5.49.2",
+    "morgan": "~1.9.1",
+    "pug": "2.0.0-beta11",
+    "undici": "^7.16.0"
+  }
+}
