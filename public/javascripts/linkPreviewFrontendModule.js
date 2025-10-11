@@ -1,10 +1,14 @@
 (() => {
-    const API_BASE = 'https://linkprewiev.example.com/api/parse?url=';
+    if (window.CLIENT?.name !== 'Deenya') return;
+
+    const API_BASE = 'https://link-prewiev-api.vercel.app/api/parse?url=';
     const linkRegex = /(https?:\/\/[^\s]+)/i;
     const cache = new Map();
 
+    console.log('[linkPreview] Инициализирован для CyTube');
+
     // === 1. Обработка новых сообщений ===
-    socket.on("chatMsg", async (data) => {
+    socket.on("chatMsg", (data) => {
         if (!data?.msg) return;
         const match = data.msg.match(linkRegex);
         if (!match) return;
@@ -14,12 +18,14 @@
     });
 
     // === 2. Обработка уже загруженных сообщений ===
-    window.addEventListener('load', () => {
+    function processExistingMessages() {
+        console.dir('document loaded');
         document.querySelectorAll('#messagebuffer > div').forEach(el => {
             const username = el.querySelector('.username')?.textContent?.replace(/[:\s]+$/, '');
             const spans = el.querySelectorAll('span');
             const msgSpan = spans[2];
             if (!msgSpan) return;
+
             const msg = msgSpan.textContent?.trim();
             if (!msg) return;
 
@@ -30,7 +36,15 @@
             const msgData = { username, msg, time: Date.now() };
             handleLinkPreview(msgData, url);
         });
-    });
+    }
+
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+        // страница уже загружена
+        processExistingMessages();
+    } else {
+        // дождаться загрузки
+        window.addEventListener('load', processExistingMessages);
+    }
 
     // === 3. Универсальная обработка ссылки ===
     async function handleLinkPreview(data, url) {
@@ -70,18 +84,18 @@
         const card = document.createElement('div');
         card.className = 'link-preview';
         card.style.cssText = `
-      margin: 4px 0 6px 24px;
-      border: 1px solid #333;
-      border-radius: 6px;
-      overflow: hidden;
-      display: flex;
-      max-width: 420px;
-      background: #111;
-      color: #ddd;
-      font-size: 13px;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    `;
+            margin: 4px 0 6px 24px;
+            border: 1px solid #333;
+            border-radius: 6px;
+            overflow: hidden;
+            display: flex;
+            max-width: 420px;
+            background: #111;
+            color: #ddd;
+            font-size: 13px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        `;
 
         if (meta.image) {
             const img = document.createElement('img');
@@ -114,11 +128,7 @@
         card.appendChild(body);
         msgElem.insertAdjacentElement('afterend', card);
 
-        // Анимация появления
-        requestAnimationFrame(() => {
-            card.style.opacity = '1';
-        });
+        requestAnimationFrame(() => card.style.opacity = '1');
     }
 
-    console.log('[linkPreview] Инициализирован для CyTube');
 })();

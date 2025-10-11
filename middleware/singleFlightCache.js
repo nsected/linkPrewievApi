@@ -1,7 +1,7 @@
 // middleware/singleFlightCache.js
 
 /**
- * Создаёт middleware с защитой от шторма и LRU-кешем.
+ * middleware с защитой от шторма и LRU-кешем.
  * @param {Function} handler - async (url) => Promise<any>
  * @param {Object} [options]
  * @param {number} [options.cacheSize=10] - количество элементов в LRU-кеше
