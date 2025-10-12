@@ -7,7 +7,7 @@
  * @param {Object} [options]
  * @param {number} [options.cacheSize=10] - количество элементов в LRU-кеше
  */
-export function createSingleFlightCache(handler, { cacheSize = 10 } = {}) {
+export function createSingleFlightCache(handler, { cacheSize = 300 } = {}) {
     const pending = new Map();
     const cache = new Map();
 
