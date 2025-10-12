@@ -10,7 +10,7 @@
     function debug(level, message, ...data) {
         if (!DEBUG_ENABLED) return;
         const index = DEBUG_LEVELS.indexOf(level);
-        if (index === -1) level = 'info';
+        if (index === -1) level = 'verbose';
 
         const prefix = `[linkPreview:${level.toUpperCase()}]`;
         const color =

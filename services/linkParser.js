@@ -163,26 +163,15 @@ export async function parseUrl(url) {
 
         const { body: html, headers } = await got(url, {
             headers: {
-                "accept":
-                    "text/html,application/xhtml+xml,application/xml;q=0.9,image/jxl,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
-                "accept-encoding": "gzip, deflate, br, zstd",
+                "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                "accept-encoding": "gzip, deflate, br",
                 "accept-language": "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7",
-                "cache-control": "max-age=0",
-                "priority": "u=0, i",
+                "cache-control": "no-cache",
                 "referer": "https://www.google.com/",
-                "sec-ch-ua": `"Not?A_Brand";v="99", "Chromium";v="130"`,
-                "sec-ch-ua-mobile": "?0",
-                "sec-ch-ua-platform": `"Windows"`,
-                "sec-fetch-dest": "document",
-                "sec-fetch-mode": "navigate",
-                "sec-fetch-site": "same-origin",
-                "sec-fetch-user": "?1",
-                "sec-gpc": "1",
-                "service-worker-navigation-preload": "true",
                 "upgrade-insecure-requests": "1",
-                "user-agent":
-                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
-            },
+                "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"
+            }
+            ,
             timeout: { request: 10000 },
             retry: { limit: 2 },
             followRedirect: true,
@@ -197,9 +186,43 @@ export async function parseUrl(url) {
             return { url };
         }
 
+        // === 💬 BEGIN DEBUG HTML STRUCTURE LOGGING ===
+        try {
+            const $ = cheerio.load(html);
+
+            // 1️⃣ Проверяем наличие og-тегов
+            const ogTags = {};
+            $("meta[property^='og:']").each((_, el) => {
+                const prop = $(el).attr("property");
+                const content = $(el).attr("content");
+                ogTags[prop] = content;
+            });
+            debug("🔎 Found OpenGraph tags:", ogTags);
+
+            // 2️⃣ JSON-LD (структурированные данные)
+            const jsonLdBlocks = [];
+            $("script[type='application/ld+json']").each((_, el) => {
+                jsonLdBlocks.push($(el).html()?.trim().slice(0, 300)); // ограничим 300 символами
+            });
+            debug(`🧩 Found ${jsonLdBlocks.length} JSON-LD blocks. Sample:`, jsonLdBlocks.slice(0, 1));
+
+            // 3️⃣ Title и description
+            const titleTag = $("title").text();
+            const metaDesc = $("meta[name='description']").attr("content");
+            debug("📘 <title>:", truncate(titleTag, 200));
+            debug("📄 <meta name='description'>:", truncate(metaDesc, 200));
+
+            // 4️⃣ Проверим, не пустой ли вообще HTML
+            debug("📊 HTML length:", html.length);
+            if (html.length < 10000) debug("⚠️ HTML suspiciously short – likely partial or placeholder page.");
+        } catch (e) {
+            debug("⚠️ HTML debug parsing failed:", e.message);
+        }
+// === 💬 END DEBUG HTML STRUCTURE LOGGING ===
+
         debug("🔍 Extracting metadata via metascraper...");
         const metadata = await scraper({ html, url });
-        debug("✅ Metadata extracted:", metadata);
+        debug(`✅ Metadata extracted for url ${url}:`, metadata);
 
         debug("🖼️ Extracting image...");
         const image = await getImage(html, url, metadata);
