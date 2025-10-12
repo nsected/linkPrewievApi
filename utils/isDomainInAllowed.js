@@ -20,7 +20,7 @@ function loadAllowedDomains() {
             throw new Error('Invalid format: JSON must be an array');
         }
 
-        allowedDomains = parsed;
+        allowedDomains = parsed.map(d => d.trim().toLowerCase());
         console.log(`[INFO] Allowed domains loaded (${allowedDomains.length} entries):`, allowedDomains);
     } catch (err) {
         console.error(`[ERROR] Failed to load allowed domains: ${err.message}`);
@@ -39,15 +39,33 @@ fs.watchFile(ALLOWED_DOMAINS_FILE, { interval: 2000 }, (curr, prev) => {
     }
 });
 
-// Экспорт для других модулей
+// Проверка на вайтлист
 export function isDomainAllowed(domain) {
-    console.log('!!!')
-    console.log(domain)
-    console.log(allowedDomains)
-    return allowedDomains.includes(domain);
-        //return true
+    console.log('!!! [isDomainAllowed] --- Domain check start ---');
+    console.log('Input domain:', domain);
+    console.log('Allowed domains:', allowedDomains);
+
+    if (!domain) {
+        console.warn('[WARN] Empty or undefined domain received.');
+        return false;
+    }
+
+    // 🔹 Нормализуем домен (без www. и в нижний регистр)
+    const normalized = domain.trim().toLowerCase().replace(/^www\./, '');
+    console.log('[DEBUG] Normalized domain:', normalized);
+
+    // 🔹 Проверяем: прямое совпадение или поддомен разрешённого домена
+    const allowed = allowedDomains.some(allowedDomain => {
+        const base = allowedDomain.replace(/^www\./, '');
+        return normalized === base || normalized.endsWith(`.${base}`);
+    });
+
+    console.log(`[RESULT] Domain "${domain}" allowed:`, allowed);
+    console.log('!!! [isDomainAllowed] --- Domain check end ---\n');
+    return allowed;
 }
 
+// Возврат списка
 export function getAllowedDomains() {
     return [...allowedDomains];
 }
