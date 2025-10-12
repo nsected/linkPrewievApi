@@ -1,90 +1,76 @@
 (() => {
-    if (window.CLIENT?.name !== 'Deenya') return;
+    //if (window.CLIENT?.name !== 'Deenya') return;
 
-    const API_BASE = 'https://link-prewiev-api.vercel.app/api/parse?url=';
+    const API_BASE = 'https://linkprewievapi.onrender.com/api/parse?url=';
     const linkRegex = /(https?:\/\/[^\s]+)/i;
     const cache = new Map();
 
     console.log('[linkPreview] Инициализирован для CyTube');
 
-    // === 1. Обработка новых сообщений ===
-    socket.on("chatMsg", (data) => {
-        if (!data?.msg) return;
-        const match = data.msg.match(linkRegex);
-        if (!match) return;
-
-        const url = match[1];
-        handleLinkPreview(data, url);
-    });
-
-    // === 2. Обработка уже загруженных сообщений ===
+    // === 1. Обработка уже существующих сообщений ===
     function processExistingMessages() {
-        console.dir('document loaded');
-        document.querySelectorAll('#messagebuffer > div').forEach(el => {
-            const username = el.querySelector('.username')?.textContent?.replace(/[:\s]+$/, '');
-            const spans = el.querySelectorAll('span');
-            const msgSpan = spans[2];
-            if (!msgSpan) return;
-
-            const msg = msgSpan.textContent?.trim();
-            if (!msg) return;
-
-            const match = msg.match(linkRegex);
-            if (!match) return;
-
-            const url = match[1];
-            const msgData = { username, msg, time: Date.now() };
-            handleLinkPreview(msgData, url);
+        console.log('[linkPreview] 🔎 Проверка существующих сообщений...');
+        document.querySelectorAll('#messagebuffer > div').forEach(msgElem => {
+            const text = msgElem.textContent;
+            const url = text.match(linkRegex);
+            if (url) {
+                console.log('[linkPreview] 🆕 Новое сообщение с ссылкой обнаружено:', url[1]);
+                handleLinkPreview(msgElem, url[1]);
+            }
         });
     }
 
-    if (document.readyState === 'complete' || document.readyState === 'interactive') {
-        // страница уже загружена
-        processExistingMessages();
-    } else {
-        // дождаться загрузки
-        window.addEventListener('load', processExistingMessages);
-    }
+    // === 2. MutationObserver для новых сообщений ===
+    const observer = new MutationObserver(mutations => {
+        mutations.forEach(mutation => {
+            mutation.addedNodes.forEach(msgElem => {
+                if (msgElem.nodeType !== Node.ELEMENT_NODE) return;
+                const text = msgElem.textContent;
+                const url = text.match(linkRegex);
+                if (url) {
+                    console.log('[linkPreview] 🆕 Новое сообщение с ссылкой обнаружено:', url[1]);
+                    handleLinkPreview(msgElem, url[1]);
+                }
+            });
+        });
+    });
 
-    // === 3. Универсальная обработка ссылки ===
-    async function handleLinkPreview(data, url) {
+    // === 3. Функция обработки ссылки ===
+    async function handleLinkPreview(msgElem, url) {
+        if (!msgElem || !url) return;
+
         if (cache.has(url)) {
-            addLinkPreviewToChat(data, cache.get(url));
+            addLinkPreviewToChat(msgElem, cache.get(url));
             return;
         }
+
+        console.log('[linkPreview] ▶ handleLinkPreview для', url);
 
         try {
             const resp = await fetch(`${API_BASE}${encodeURIComponent(url)}`);
             if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
             const meta = await resp.json();
             if (!meta?.title) return;
+
+            console.log('[linkPreview] ✅ Распарсенные метаданные:', meta);
+            console.log(cache);
             cache.set(url, meta);
-            addLinkPreviewToChat(data, meta);
+            addLinkPreviewToChat(msgElem, meta);
+
         } catch (err) {
             console.warn('[linkPreview] Ошибка при получении превью:', err);
         }
     }
 
-    // === 4. Добавление карточки в чат ===
-    function addLinkPreviewToChat(msgData, meta) {
-        const msgElems = document.querySelectorAll('#messagebuffer > div');
-        const msgElem = Array.from(msgElems).find(el => {
-            const nameEl = el.querySelector('.username');
-            const spans = el.querySelectorAll('span');
-            const msgSpan = spans[2];
-            if (!nameEl || !msgSpan) return false;
-
-            const username = nameEl.textContent.replace(/[:\s]+$/, '');
-            const text = msgSpan.textContent.trim();
-            return username === msgData.username && text.includes(msgData.msg.trim());
-        });
-
-        if (!msgElem || msgElem.querySelector('.link-preview')) return;
+    // === 4. Добавление карточки ===
+    function addLinkPreviewToChat(msgElem, meta) {
+        if (!msgElem) return;
+        if (msgElem.querySelector('.link-preview')) return;
 
         const card = document.createElement('div');
         card.className = 'link-preview';
         card.style.cssText = `
-            margin: 4px 0 6px 24px;
+            margin: 4px 0 6px 0;
             border: 1px solid #333;
             border-radius: 6px;
             overflow: hidden;
@@ -126,9 +112,20 @@
         }
 
         card.appendChild(body);
-        msgElem.insertAdjacentElement('afterend', card);
+
+        // вставляем в конец элемента сообщения
+        msgElem.appendChild(card);
 
         requestAnimationFrame(() => card.style.opacity = '1');
+        console.log('[linkPreview] ✅ Карточка вставлена в элемент:', msgElem);
+    }
+
+
+
+    const msgBuffer = document.getElementById('messagebuffer');
+    if (msgBuffer) {
+        observer.observe(msgBuffer, { childList: true });
+        processExistingMessages();
     }
 
 })();

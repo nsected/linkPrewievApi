@@ -155,7 +155,7 @@ export async function parseUrl(url) {
                 "accept-language": "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7",
                 "cache-control": "max-age=0",
                 "priority": "u=0, i",
-                "referer": "https://www.ozon.ru/product/plate-teks-plyus-1884157099/",
+                "referer": "https://www.google.com/",
                 "sec-ch-ua": `"Not?A_Brand";v="99", "Chromium";v="130"`,
                 "sec-ch-ua-mobile": "?0",
                 "sec-ch-ua-platform": `"Windows"`,
