@@ -8,10 +8,12 @@ import metascraperUrl from "metascraper-url";
 import metascraperAuthor from "metascraper-author";
 import metascraperPublisher from "metascraper-publisher";
 import metascraperDate from "metascraper-date";
-import * as cheerio from 'cheerio';
-import { isDomainAllowed, getAllowedDomains } from '../utils/isDomainInAllowed.js';
-// todo: добавить кэширование 10 ссылок (middleware на req)
-// создаём экземпляр metascraper с нужными правилами
+import * as cheerio from "cheerio";
+import { isDomainAllowed, getAllowedDomains } from "../utils/isDomainInAllowed.js";
+
+// deprecated: todo moved below to unified debug()
+// console.log calls replaced with structured debug
+
 const scraper = metascraper([
     metascraperTitle(),
     metascraperDescription(),
@@ -23,22 +25,40 @@ const scraper = metascraper([
     metascraperDate(),
 ]);
 
-// список расширений, которые считаем "файловыми" и игнорируем
 const fileExtensions = [
-    ".jpg", ".jpeg", ".png", ".gif", ".webp",
-    ".mp4", ".avi", ".mov", ".mkv",
-    ".pdf", ".doc", ".docx", ".xls", ".xlsx",
-    ".zip", ".rar", ".7z", ".tar", ".gz",
-    ".mp3", ".wav", ".ogg",
+    ".jpg",
+    ".jpeg",
+    ".png",
+    ".gif",
+    ".webp",
+    ".mp4",
+    ".avi",
+    ".mov",
+    ".mkv",
+    ".pdf",
+    ".doc",
+    ".docx",
+    ".xls",
+    ".xlsx",
+    ".zip",
+    ".rar",
+    ".7z",
+    ".tar",
+    ".gz",
+    ".mp3",
+    ".wav",
+    ".ogg",
 ];
 
-// проверка на прямую ссылку к файлу
-function isFileUrl(url) {
-    const pathname = new URL(url).pathname.toLowerCase();
-    return fileExtensions.some(ext => pathname.endsWith(ext));
+function debug(...args) {
+    console.debug("[parser]", ...args);
 }
 
-// обрезка строки
+function isFileUrl(url) {
+    const pathname = new URL(url).pathname.toLowerCase();
+    return fileExtensions.some((ext) => pathname.endsWith(ext));
+}
+
 function truncate(str, length = 150) {
     if (!str) return "";
     return str.length > length ? str.slice(0, length) + "..." : str;
@@ -46,39 +66,28 @@ function truncate(str, length = 150) {
 
 function extractDomain(url) {
     try {
-        return new URL(url.includes('://') ? url : 'http://' + url).hostname;
+        return new URL(url.includes("://") ? url : "http://" + url).hostname;
     } catch {
         return null;
     }
-};
+}
 
 /**
  * Универсальная функция: получает изображение для предпросмотра
- * - если домен в белом списке → постер (metadata.image) или логотип
- * - если домен не в белом списке → только логотип
- * @param {string} html - HTML страницы
- * @param {string} url - URL страницы
- * @param {object} metadata - объект от metascraper
- * @returns {string} URL изображения
  */
 async function getImage(html, url, metadata = {}) {
-    // 5️⃣ Проверка белого списка
+    debug(`🖼️ [getImage] Start image extraction for ${url}`);
     const isAllowed = isDomainAllowed(extractDomain(url));
-    console.log(url);
-    console.log(isAllowed);
-    console.log(getAllowedDomains());
+    debug(`🟢 Domain allowed: ${isAllowed}, Allowed list:`, getAllowedDomains());
+
     if (isAllowed && metadata.image) {
+        debug(`✅ Using metadata.image for allowed domain: ${metadata.image}`);
         return metadata.image;
     }
 
     const $ = cheerio.load(html);
     const hostname = new URL(url).hostname;
 
-    /**
-     * Проверяет, существует ли favicon.ico
-     * @param {string} faviconUrl
-     * @returns {Promise<boolean>}
-     */
     async function faviconExists(faviconUrl) {
         try {
             const response = await got.head(faviconUrl, { timeout: { request: 3000 } });
@@ -89,68 +98,73 @@ async function getImage(html, url, metadata = {}) {
         }
     }
 
-
-    // 1️⃣ Собираем кандидатов на логотип
     let candidates = [];
 
-    if (metadata.logo) candidates.push(metadata.logo);
+    if (metadata.logo) {
+        debug(`Found metadata.logo: ${metadata.logo}`);
+        candidates.push(metadata.logo);
+    }
 
-    $('link[rel="icon"], link[rel="shortcut icon"], link[rel="apple-touch-icon"], link[rel="mask-icon"]').each((_, el) => {
+    $("link[rel='icon'], link[rel='shortcut icon'], link[rel='apple-touch-icon'], link[rel='mask-icon']").each((_, el) => {
         const href = $(el).attr("href");
         if (href) candidates.push(new URL(href, url).toString());
     });
 
-    $('meta[property="og:logo"]').each((_, el) => {
+    $("meta[property='og:logo']").each((_, el) => {
         const content = $(el).attr("content");
         if (content) candidates.push(new URL(content, url).toString());
     });
 
-    $('script[type="application/ld+json"]').each((_, el) => {
+    $("script[type='application/ld+json']").each((_, el) => {
         try {
             const data = JSON.parse($(el).contents().text());
             if (Array.isArray(data)) {
-                data.forEach(item => { if (item.logo) candidates.push(item.logo); });
+                data.forEach((item) => {
+                    if (item.logo) candidates.push(item.logo);
+                });
             } else if (data && data.logo) {
                 candidates.push(data.logo);
             }
         } catch {}
     });
 
-    // --- Проверяем favicon.ico ---
     const faviconUrl = `https://${hostname}/favicon.ico`;
     if (await faviconExists(faviconUrl)) {
+        debug(`Found favicon.ico at ${faviconUrl}`);
         candidates.push(faviconUrl);
     }
 
-    // 3️⃣ Убираем дубликаты
     candidates = [...new Set(candidates)];
 
-    // 4️⃣ Сортируем по качеству (svg > png > jpg > ico)
     const qualityOrder = [".svg", ".png", ".jpg", ".jpeg", ".ico"];
     candidates.sort((a, b) => {
-        const extA = qualityOrder.findIndex(ext => a.toLowerCase().includes(ext));
-        const extB = qualityOrder.findIndex(ext => b.toLowerCase().includes(ext));
+        const extA = qualityOrder.findIndex((ext) => a.toLowerCase().includes(ext));
+        const extB = qualityOrder.findIndex((ext) => b.toLowerCase().includes(ext));
         return (extA === -1 ? 999 : extA) - (extB === -1 ? 999 : extB);
     });
 
+    debug(`🎯 Logo candidates (${candidates.length}):`, candidates);
     const bestLogo = candidates[0];
-console.log(candidates);
 
-
-    // 6️⃣ Возвращаем изображение
-    return isAllowed ? (metadata.image || bestLogo) : bestLogo;
+    debug(`✅ Selected best logo: ${bestLogo || "none"}`);
+    debug(`🖼️ [getImage] Done for ${url}`);
+    return isAllowed ? metadata.image || bestLogo : bestLogo;
 }
 
 export async function parseUrl(url) {
+    debug(`🔄 [parseUrl] --- Start parsing pipeline for URL: ${url} ---`);
     try {
         if (isFileUrl(url)) {
+            debug(`📁 Detected file URL: ${url}`);
             return { url };
         }
 
-        // загружаем html
+        debug("🌐 Fetching HTML via got()...");
+
         const { body: html, headers } = await got(url, {
             headers: {
-                "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/jxl,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+                "accept":
+                    "text/html,application/xhtml+xml,application/xml;q=0.9,image/jxl,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
                 "accept-encoding": "gzip, deflate, br, zstd",
                 "accept-language": "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7",
                 "cache-control": "max-age=0",
@@ -166,7 +180,8 @@ export async function parseUrl(url) {
                 "sec-gpc": "1",
                 "service-worker-navigation-preload": "true",
                 "upgrade-insecure-requests": "1",
-                "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"
+                "user-agent":
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
             },
             timeout: { request: 10000 },
             retry: { limit: 2 },
@@ -175,30 +190,32 @@ export async function parseUrl(url) {
         });
 
         const contentType = headers["content-type"] || "";
+        debug(`📄 Content-Type: ${contentType}`);
+
         if (!contentType.includes("text/html")) {
+            debug(`⚠️ Non-HTML content, skipping parse.`);
             return { url };
         }
 
-        // парсим метаданные
-        let metadata = await scraper({ html, url });
+        debug("🔍 Extracting metadata via metascraper...");
+        const metadata = await scraper({ html, url });
+        debug("✅ Metadata extracted:", metadata);
 
-        let image = await getImage(html, url, metadata )
+        debug("🖼️ Extracting image...");
+        const image = await getImage(html, url, metadata);
 
-        // финальный объект
-        let prewviewObject = {
+        const previewObject = {
             url,
             title: metadata.title ? truncate(metadata.title, 100) : "",
             description: metadata.description ? truncate(metadata.description, 200) : "",
-            image: image ? image : ''
+            image: image || "",
         };
 
-        console.log(metadata.description);
-        console.log(prewviewObject);
-
-        return prewviewObject;
-
+        debug("🏁 [parseUrl] Final preview object:", previewObject);
+        debug(`✅ [parseUrl] --- Completed successfully for ${url} ---`);
+        return previewObject;
     } catch (err) {
-        console.error("Parser error:", err.message);
+        debug(`❌ [parseUrl] Error for ${url}:`, err.message);
         return { url, error: "Failed to parse page" };
     }
 }
