@@ -44,8 +44,8 @@ export function isDomainAllowed(domain) {
     console.log('!!!')
     console.log(domain)
     console.log(allowedDomains)
-    //return allowedDomains.includes(domain);
-    return true
+    return allowedDomains.includes(domain);
+        //return true
 }
 
 export function getAllowedDomains() {
