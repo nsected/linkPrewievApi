@@ -230,7 +230,7 @@ export async function parseUrl(url) {
 
                         // 4️⃣ Проверим, не пустой ли вообще HTML
                         debug("📊 HTML length:", headHtml.length);
-                        debug("📄 HTML start preview:\n", headHtml);
+                        debug("📄 HTML start preview:\n", headHtml.slice(0, 2000));
                         if (headHtml.length < 10000) debug("⚠️ HTML suspiciously short – likely partial or placeholder page.");
                     } catch (e) {
                         debug("⚠️ HTML debug parsing failed:", e.message);
