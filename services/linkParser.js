@@ -1,4 +1,6 @@
 import got from "got";
+import fs from "fs";
+import path from "path";
 import { StringDecoder } from "node:string_decoder";
 import metascraper from "metascraper";
 import metascraperTitle from "metascraper-title";
@@ -231,6 +233,22 @@ export async function parseUrl(url) {
                         // 4️⃣ Проверим, не пустой ли вообще HTML
                         debug("📊 HTML length:", headHtml.length);
                         debug("📄 HTML start preview:\n", headHtml.slice(0, 2000));
+                        console.log(`[debugHtml] 🌐 Fetching: ${url}`);
+
+                        // Добавляем URL в начало HTML (в комментарий, чтобы не сломать структуру)
+                        const debugHtml = `<!-- Source URL: ${url} -->\n${headHtml}`;
+
+                        // Путь до файла
+                        const debugPath = path.join(process.cwd(), "public", "debug.html");
+
+                        // Сохраняем в файл
+                        fs.writeFileSync(debugPath, debugHtml, "utf-8");
+
+                        // Формируем ссылку
+                        const debugUrl = `https://linkprewievapi.onrender.com/debug.html`;
+
+                        console.log(`[debugHtml] ✅ HTML saved to: ${debugPath}`);
+                        console.log(`[debugHtml] 🔗 View in browser: ${debugUrl}`);
                         if (headHtml.length < 10000) debug("⚠️ HTML suspiciously short – likely partial or placeholder page.");
                     } catch (e) {
                         debug("⚠️ HTML debug parsing failed:", e.message);
