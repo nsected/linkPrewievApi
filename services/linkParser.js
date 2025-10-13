@@ -132,7 +132,7 @@ async function getImage(html, url, metadata = {}) {
     const faviconUrl = `https://${hostname}/favicon.ico`;
     if (await faviconExists(faviconUrl)) {
         debug(`Found favicon.ico at ${faviconUrl}`);
-        candidates.push(faviconUrl);
+        candidates.unshift(faviconUrl);
     }
 
     candidates = [...new Set(candidates)];
@@ -145,7 +145,7 @@ async function getImage(html, url, metadata = {}) {
     });
 
     debug(`🎯 Logo candidates (${candidates.length}):`, candidates);
-    const bestLogo = candidates[0];
+    const bestLogo = candidates[candidates.length-1];
 
     debug(`✅ Selected best logo: ${bestLogo || "none"}`);
     debug(`🖼️ [getImage] Done for ${url}`);
