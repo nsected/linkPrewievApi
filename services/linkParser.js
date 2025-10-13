@@ -103,17 +103,17 @@ async function getImage(html, url, metadata = {}) {
 
     if (metadata.logo) {
         debug(`Found metadata.logo: ${metadata.logo}`);
-        candidates.push(metadata.logo);
+        candidates.unshift(metadata.logo);
     }
 
     $("link[rel='icon'], link[rel='shortcut icon'], link[rel='apple-touch-icon'], link[rel='mask-icon']").each((_, el) => {
         const href = $(el).attr("href");
-        if (href) candidates.push(new URL(href, url).toString());
+        if (href) candidates.unshift(new URL(href, url).toString());
     });
 
     $("meta[property='og:logo']").each((_, el) => {
         const content = $(el).attr("content");
-        if (content) candidates.push(new URL(content, url).toString());
+        if (content) candidates.unshift(new URL(content, url).toString());
     });
 
     $("script[type='application/ld+json']").each((_, el) => {
