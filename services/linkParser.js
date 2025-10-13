@@ -121,10 +121,10 @@ async function getImage(html, url, metadata = {}) {
             const data = JSON.parse($(el).contents().text());
             if (Array.isArray(data)) {
                 data.forEach((item) => {
-                    if (item.logo) candidates.push(item.logo);
+                    if (item.logo) candidates.unshift(item.logo);
                 });
             } else if (data && data.logo) {
-                candidates.push(data.logo);
+                candidates.unshift(data.logo);
             }
         } catch {}
     });
@@ -145,7 +145,7 @@ async function getImage(html, url, metadata = {}) {
     });
 
     debug(`🎯 Logo candidates (${candidates.length}):`, candidates);
-    const bestLogo = candidates[candidates.length-1];
+    const bestLogo = candidates[0];
 
     debug(`✅ Selected best logo: ${bestLogo || "none"}`);
     debug(`🖼️ [getImage] Done for ${url}`);
