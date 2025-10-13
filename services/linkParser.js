@@ -1,4 +1,5 @@
 import got from "got";
+import { StringDecoder } from "node:string_decoder";
 import metascraper from "metascraper";
 import metascraperTitle from "metascraper-title";
 import metascraperDescription from "metascraper-description";
@@ -151,92 +152,122 @@ async function getImage(html, url, metadata = {}) {
     return isAllowed ? metadata.image || bestLogo : bestLogo;
 }
 
+
+/**
+ * Основная функция парсинга URL с потоковой обработкой
+ */
 export async function parseUrl(url) {
     debug(`🔄 [parseUrl] --- Start parsing pipeline for URL: ${url} ---`);
+
     try {
         if (isFileUrl(url)) {
             debug(`📁 Detected file URL: ${url}`);
             return { url };
         }
 
-        debug("🌐 Fetching HTML via got()...");
+        // 🆕 Новый режим — потоковая загрузка через got.stream()
+        debug("🌐 Fetching HTML stream via got() (head-only optimization)...");
 
-        const { body: html, headers } = await got(url, {
-            headers: {
-                "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-                "accept-encoding": "gzip, deflate, br",
-                "accept-language": "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7",
-                "cache-control": "no-cache",
-                "referer": "https://www.google.com/",
-                "upgrade-insecure-requests": "1",
-                "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"
-            }
-            ,
-            timeout: { request: 10000 },
-            retry: { limit: 2 },
-            followRedirect: true,
-            maxRedirects: 20,
-        });
+        return new Promise((resolve, reject) => {
+            const decoder = new StringDecoder("utf8"); // 🆕 для аккуратной сборки чанков
+            let buffer = "";
+            let headClosed = false;
 
-        const contentType = headers["content-type"] || "";
-        debug(`📄 Content-Type: ${contentType}`);
-
-        if (!contentType.includes("text/html")) {
-            debug(`⚠️ Non-HTML content, skipping parse.`);
-            return { url };
-        }
-
-        // === 💬 BEGIN DEBUG HTML STRUCTURE LOGGING ===
-        try {
-            const $ = cheerio.load(html);
-
-            // 1️⃣ Проверяем наличие og-тегов
-            const ogTags = {};
-            $("meta[property^='og:']").each((_, el) => {
-                const prop = $(el).attr("property");
-                const content = $(el).attr("content");
-                ogTags[prop] = content;
+            const stream = got.stream(url, {
+                headers: {
+                    "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                    "accept-encoding": "gzip, deflate, br",
+                    "accept-language": "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7",
+                    "cache-control": "no-cache",
+                    "referer": "https://www.google.com/",
+                    "upgrade-insecure-requests": "1",
+                    "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"
+                },
+                timeout: { request: 10000 },
+                retry: { limit: 2 },
+                followRedirect: true,
+                maxRedirects: 20,
             });
-            debug("🔎 Found OpenGraph tags:", ogTags);
 
-            // 2️⃣ JSON-LD (структурированные данные)
-            const jsonLdBlocks = [];
-            $("script[type='application/ld+json']").each((_, el) => {
-                jsonLdBlocks.push($(el).html()?.trim().slice(0, 300)); // ограничим 300 символами
-            });
-            debug(`🧩 Found ${jsonLdBlocks.length} JSON-LD blocks. Sample:`, jsonLdBlocks.slice(0, 1));
+            stream.on("data", async (chunk) => {
+                if (headClosed) return; // 🆕 если head уже найден — игнорируем остальные чанки
 
-            // 3️⃣ Title и description
-            const titleTag = $("title").text();
-            const metaDesc = $("meta[name='description']").attr("content");
-            debug("📘 <title>:", truncate(titleTag, 200));
-            debug("📄 <meta name='description'>:", truncate(metaDesc, 200));
+                buffer += decoder.write(chunk);
+                const idx = buffer.indexOf("</head>");
 
-            // 4️⃣ Проверим, не пустой ли вообще HTML
-            debug("📊 HTML length:", html.length);
-            if (html.length < 10000) debug("⚠️ HTML suspiciously short – likely partial or placeholder page.");
-        } catch (e) {
-            debug("⚠️ HTML debug parsing failed:", e.message);
-        }
+                if (idx !== -1) {
+                    headClosed = true;
+                    const headHtml = buffer.slice(0, idx + 7); // 🆕 извлекаем только head часть
+                    stream.destroy(); // 🆕 останавливаем загрузку страницы
+
+                    debug("🧠 </head> detected — starting metascraper immediately...");
+
+// === 💬 BEGIN DEBUG HTML STRUCTURE LOGGING ===
+                    try {
+                        const $ = cheerio.load(headHtml);
+
+                        // 1️⃣ Проверяем наличие og-тегов
+                        const ogTags = {};
+                        $("meta[property^='og:']").each((_, el) => {
+                            const prop = $(el).attr("property");
+                            const content = $(el).attr("content");
+                            ogTags[prop] = content;
+                        });
+                        debug("🔎 Found OpenGraph tags:", ogTags);
+
+                        // 2️⃣ JSON-LD (структурированные данные)
+                        const jsonLdBlocks = [];
+                        $("script[type='application/ld+json']").each((_, el) => {
+                            jsonLdBlocks.push($(el).html()?.trim().slice(0, 300)); // ограничим 300 символами
+                        });
+                        debug(`🧩 Found ${jsonLdBlocks.length} JSON-LD blocks. Sample:`, jsonLdBlocks.slice(0, 1));
+
+                        // 3️⃣ Title и description
+                        const titleTag = $("title").text();
+                        const metaDesc = $("meta[name='description']").attr("content");
+                        debug("📘 <title>:", truncate(titleTag, 200));
+                        debug("📄 <meta name='description'>:", truncate(metaDesc, 200));
+
+                        // 4️⃣ Проверим, не пустой ли вообще HTML
+                        debug("📊 HTML length:", headHtml.length);
+                        debug("📄 HTML start preview:\n", headHtml);
+                        if (headHtml.length < 10000) debug("⚠️ HTML suspiciously short – likely partial or placeholder page.");
+                    } catch (e) {
+                        debug("⚠️ HTML debug parsing failed:", e.message);
+                    }
 // === 💬 END DEBUG HTML STRUCTURE LOGGING ===
+                    try {
+                        const metadata = await scraper({ html: headHtml, url });
+                        debug("✅ Metadata extracted early:", metadata);
 
-        debug("🔍 Extracting metadata via metascraper...");
-        const metadata = await scraper({ html, url });
-        debug(`✅ Metadata extracted for url ${url}:`, metadata);
+                        const image = await getImage(headHtml, url, metadata);
+                        const previewObject = {
+                            url,
+                            title: metadata.title ? truncate(metadata.title, 100) : "",
+                            description: metadata.description ? truncate(metadata.description, 200) : "",
+                            image: image || "",
+                        };
 
-        debug("🖼️ Extracting image...");
-        const image = await getImage(html, url, metadata);
+                        debug("🏁 [parseUrl] Final preview object (stream mode):", previewObject);
+                        resolve(previewObject);
+                    } catch (err) {
+                        reject(err);
+                    }
+                }
+            });
 
-        const previewObject = {
-            url,
-            title: metadata.title ? truncate(metadata.title, 100) : "",
-            description: metadata.description ? truncate(metadata.description, 200) : "",
-            image: image || "",
-        };
+            stream.on("error", (err) => {
+                debug(`❌ Stream error for ${url}:`, err.message);
+                reject({ url, error: "Stream error" });
+            });
 
-        debug("🏁 [parseUrl] Final preview object:", previewObject);
-        debug(`✅ [parseUrl] --- Completed successfully for ${url} ---`);
-        return previewObject;
+            stream.on("end", () => {
+                if (!headClosed) {
+                    debug("⚠️ Stream ended before </head> — fallback to minimal parsing.");
+                    resolve({ url, error: "No <head> found" });
+                }
+            });
+        });
     } catch (err) {
         debug(`❌ [parseUrl] Error for ${url}:`, err.message);
         return { url, error: "Failed to parse page" };
