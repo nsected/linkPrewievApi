@@ -12,7 +12,7 @@ import metascraperAuthor from "metascraper-author";
 import metascraperPublisher from "metascraper-publisher";
 import metascraperDate from "metascraper-date";
 import * as cheerio from "cheerio";
-import { isDomainAllowed, getAllowedDomains } from "../utils/isDomainInAllowed.js";
+import { isDomainAllowed, getAllowedDomains } from ".isDomainInAllowed.js";
 
 // deprecated: todo moved below to unified debug()
 // console.log calls replaced with structured debug

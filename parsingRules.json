@@ -1,0 +1,590 @@
+[
+  {
+    "domain": "yandex.ru",
+    "classification": "safe",
+    "notes": "Search & editorial services (Yandex)",
+    "fastmode": true
+  },
+  {
+    "domain": "google.com",
+    "classification": "safe",
+    "notes": "Search engine; previews usually safe",
+    "fastmode": true
+  },
+  {
+    "domain": "dzen.ru",
+    "classification": "safe",
+    "notes": "Yandex Dzen — editorial/news content",
+    "fastmode": true
+  },
+  {
+    "domain": "youtube.com",
+    "classification": "moderate",
+    "notes": "User uploads; moderated but UGC may include NSFW thumbnails",
+    "fastmode": false
+  },
+  {
+    "domain": "mail.ru",
+    "classification": "safe",
+    "notes": "Email & portal with editorial/news sections",
+    "fastmode": true
+  },
+  {
+    "domain": "ozon.ru",
+    "classification": "safe",
+    "notes": "E‑commerce marketplace",
+    "fastmode": true
+  },
+  {
+    "domain": "ya.ru",
+    "classification": "safe",
+    "notes": "Yandex short domain/redirects",
+    "fastmode": true
+  },
+  {
+    "domain": "wildberries.ru",
+    "classification": "safe",
+    "notes": "E‑commerce marketplace",
+    "fastmode": true
+  },
+  {
+    "domain": "rutube.ru",
+    "classification": "moderate",
+    "notes": "Video hosting; UGC",
+    "fastmode": true
+  },
+  {
+    "domain": "avito.ru",
+    "classification": "safe",
+    "notes": "Classifieds — mostly safe previews",
+    "fastmode": true
+  },
+  {
+    "domain": "ok.ru",
+    "classification": "moderate",
+    "notes": "Odnoklassniki social network; UGC present",
+    "fastmode": true
+  },
+  {
+    "domain": "gosuslugi.ru",
+    "classification": "safe",
+    "notes": "Government services",
+    "fastmode": true
+  },
+  {
+    "domain": "t.me",
+    "classification": "moderate",
+    "notes": "Telegram short links; channels may contain NSFW content depending on channel",
+    "fastmode": true
+  },
+  {
+    "domain": "telegram.org",
+    "classification": "moderate",
+    "notes": "App site; links point to Telegram where content varies",
+    "fastmode": true
+  },
+  {
+    "domain": "whatsapp.com",
+    "classification": "moderate",
+    "notes": "App site; previews unlikely NSFW but UGC via messages not indexed",
+    "fastmode": true
+  },
+  {
+    "domain": "vkvideo.ru",
+    "classification": "moderate",
+    "notes": "Video service connected to VK",
+    "fastmode": true
+  },
+  {
+    "domain": "wikipedia.org",
+    "classification": "safe",
+    "notes": "Reference/encyclopedia",
+    "fastmode": false
+  },
+  {
+    "domain": "kinopoisk.ru",
+    "classification": "safe",
+    "notes": "Movies and editorial content",
+    "fastmode": true
+  },
+  {
+    "domain": "market.yandex.ru",
+    "classification": "safe",
+    "notes": "Yandex Market — e‑commerce",
+    "fastmode": true
+  },
+  {
+    "domain": "gismeteo.ru",
+    "classification": "safe",
+    "notes": "Weather — editorial content",
+    "fastmode": true
+  },
+  {
+    "domain": "rbc.ru",
+    "classification": "safe",
+    "notes": "News publisher",
+    "fastmode": true
+  },
+  {
+    "domain": "twitch.tv",
+    "classification": "moderate",
+    "notes": "Streaming platform; user content can sometimes be NSFW",
+    "fastmode": true
+  },
+  {
+    "domain": "tbank.ru",
+    "classification": "safe",
+    "notes": "Bank/finance site",
+    "fastmode": true
+  },
+  {
+    "domain": "mos.ru",
+    "classification": "safe",
+    "notes": "Moscow government portal",
+    "fastmode": true
+  },
+  {
+    "domain": "sportbox.ru",
+    "classification": "safe",
+    "notes": "Sports news",
+    "fastmode": true
+  },
+  {
+    "domain": "news.sportbox.ru",
+    "classification": "safe",
+    "notes": "Sports news subdomain",
+    "fastmode": true
+  },
+  {
+    "domain": "dns-shop.ru",
+    "classification": "safe",
+    "notes": "Retail electronics",
+    "fastmode": true
+  },
+  {
+    "domain": "rambler.ru",
+    "classification": "safe",
+    "notes": "Portal and news",
+    "fastmode": true
+  },
+  {
+    "domain": "hh.ru",
+    "classification": "safe",
+    "notes": "Job listings/career site",
+    "fastmode": true
+  },
+  {
+    "domain": "music.yandex.ru",
+    "classification": "safe",
+    "notes": "Music streaming/editorial",
+    "fastmode": true
+  },
+  {
+    "domain": "news.mail.ru",
+    "classification": "safe",
+    "notes": "News publisher",
+    "fastmode": true
+  },
+  {
+    "domain": "lenta.ru",
+    "classification": "safe",
+    "notes": "News publisher",
+    "fastmode": true
+  },
+  {
+    "domain": "mts.ru",
+    "classification": "safe",
+    "notes": "Telecom operator",
+    "fastmode": true
+  },
+  {
+    "domain": "drom.ru",
+    "classification": "safe",
+    "notes": "Automotive classifieds and community",
+    "fastmode": true
+  },
+  {
+    "domain": "2gis.ru",
+    "classification": "safe",
+    "notes": "Maps / local business directory",
+    "fastmode": true
+  },
+  {
+    "domain": "yandex.com",
+    "classification": "safe",
+    "notes": "Yandex international/search",
+    "fastmode": true
+  },
+  {
+    "domain": "drive2.ru",
+    "classification": "other",
+    "notes": "Automotive blogs/community",
+    "fastmode": true
+  },
+  {
+    "domain": "aliexpress.ru",
+    "classification": "safe",
+    "notes": "E‑commerce marketplace (AliExpress localized)",
+    "fastmode": true
+  },
+  {
+    "domain": "tiktok.com",
+    "classification": "moderate",
+    "notes": "Short video platform; UGC, moderated but possible NSFW",
+    "fastmode": true
+  },
+  {
+    "domain": "championat.com",
+    "classification": "safe",
+    "notes": "Sports media",
+    "fastmode": true
+  },
+  {
+    "domain": "ria.ru",
+    "classification": "safe",
+    "notes": "News agency",
+    "fastmode": true
+  },
+  {
+    "domain": "kp.ru",
+    "classification": "safe",
+    "notes": "Newspaper Komsomolskaya Pravda",
+    "fastmode": true
+  },
+  {
+    "domain": "aviasales.ru",
+    "classification": "safe",
+    "notes": "Travel/flight search",
+    "fastmode": true
+  },
+  {
+    "domain": "sber.ru",
+    "classification": "safe",
+    "notes": "Banking — Sberbank official",
+    "fastmode": true
+  },
+  {
+    "domain": "tinkoff.ru",
+    "classification": "safe",
+    "notes": "Banking — Tinkoff Bank",
+    "fastmode": true
+  },
+  {
+    "domain": "alfabank.ru",
+    "classification": "safe",
+    "notes": "Banking",
+    "fastmode": true
+  },
+  {
+    "domain": "gazeta.ru",
+    "classification": "safe",
+    "notes": "News publisher",
+    "fastmode": true
+  },
+  {
+    "domain": "meduza.io",
+    "classification": "safe",
+    "notes": "News publisher (independent; editorial)",
+    "fastmode": true
+  },
+  {
+    "domain": "kommersant.ru",
+    "classification": "safe",
+    "notes": "Business news",
+    "fastmode": true
+  },
+  {
+    "domain": "forbes.ru",
+    "classification": "safe",
+    "notes": "Business media",
+    "fastmode": true
+  },
+  {
+    "domain": "echo.msk.ru",
+    "classification": "safe",
+    "notes": "News / radio portal",
+    "fastmode": true
+  },
+  {
+    "domain": "russian.rt.com",
+    "classification": "safe",
+    "notes": "RT global news",
+    "fastmode": true
+  },
+  {
+    "domain": "okko.tv",
+    "classification": "safe",
+    "notes": "Streaming VOD service",
+    "fastmode": true
+  },
+  {
+    "domain": "ivi.ru",
+    "classification": "safe",
+    "notes": "Streaming VOD service",
+    "fastmode": true
+  },
+  {
+    "domain": "megogo.net",
+    "classification": "safe",
+    "notes": "Streaming service",
+    "fastmode": true
+  },
+  {
+    "domain": "kinox.to",
+    "classification": "warn",
+    "notes": "Piracy/streaming sites can contain NSFW previews and malware",
+    "fastmode": true
+  },
+  {
+    "domain": "smotrim.ru",
+    "classification": "safe",
+    "notes": "Video/TV portal",
+    "fastmode": true
+  },
+  {
+    "domain": "interfax.ru",
+    "classification": "safe",
+    "notes": "News agency",
+    "fastmode": true
+  },
+  {
+    "domain": "tass.ru",
+    "classification": "safe",
+    "notes": "TASS news agency",
+    "fastmode": true
+  },
+  {
+    "domain": "rosstat.gov.ru",
+    "classification": "safe",
+    "notes": "Government statistics",
+    "fastmode": true
+  },
+  {
+    "domain": "zakupki.gov.ru",
+    "classification": "safe",
+    "notes": "Public procurement portal",
+    "fastmode": true
+  },
+  {
+    "domain": "goszakupki.ru",
+    "classification": "other",
+    "notes": "Procurement portals",
+    "fastmode": true
+  },
+  {
+    "domain": "edu.ru",
+    "classification": "safe",
+    "notes": "Education portals",
+    "fastmode": true
+  },
+  {
+    "domain": "edu.mos.ru",
+    "classification": "safe",
+    "notes": "Education (Moscow)",
+    "fastmode": true
+  },
+  {
+    "domain": "habr.com",
+    "classification": "moderate",
+    "notes": "Tech editorial + community; largely moderated but UGC exists",
+    "fastmode": true
+  },
+  {
+    "domain": "4pda.to",
+    "classification": "moderate",
+    "notes": "Tech/forum with moderated content; UGC and links to apps",
+    "fastmode": true
+  },
+  {
+    "domain": "dtf.ru",
+    "classification": "moderate",
+    "notes": "Gaming/community editorial with UGC",
+    "fastmode": true
+  },
+  {
+    "domain": "stopgame.ru",
+    "classification": "moderate",
+    "notes": "Gaming editorial/community",
+    "fastmode": true
+  },
+  {
+    "domain": "riafan.ru",
+    "classification": "safe",
+    "notes": "News portal",
+    "fastmode": true
+  },
+  {
+    "domain": "fontanka.ru",
+    "classification": "safe",
+    "notes": "Local news (St Petersburg)",
+    "fastmode": true
+  },
+  {
+    "domain": "vedomosti.ru",
+    "classification": "safe",
+    "notes": "Business news",
+    "fastmode": true
+  },
+  {
+    "domain": "rg.ru",
+    "classification": "safe",
+    "notes": "Rossijskaya Gazeta — government newspaper",
+    "fastmode": true
+  },
+  {
+    "domain": "news.yandex.ru",
+    "classification": "safe",
+    "notes": "Yandex News aggregator (editorial)",
+    "fastmode": true
+  },
+  {
+    "domain": "marketplace.yandex.ru",
+    "classification": "safe",
+    "notes": "Yandex marketplace alias",
+    "fastmode": true
+  },
+  {
+    "domain": "lamoda.ru",
+    "classification": "safe",
+    "notes": "Fashion e‑commerce",
+    "fastmode": true
+  },
+  {
+    "domain": "eldorado.ru",
+    "classification": "safe",
+    "notes": "Retail electronics",
+    "fastmode": true
+  },
+  {
+    "domain": "mvideo.ru",
+    "classification": "safe",
+    "notes": "Electronics retail",
+    "fastmode": true
+  },
+  {
+    "domain": "citilink.ru",
+    "classification": "safe",
+    "notes": "Electronics retail",
+    "fastmode": true
+  },
+  {
+    "domain": "ozon.travel",
+    "classification": "other",
+    "notes": "Travel subdomain of Ozon",
+    "fastmode": true
+  },
+  {
+    "domain": "kinopoisk.dev",
+    "classification": "other",
+    "notes": "dev/test subdomain — treat cautiously",
+    "fastmode": true
+  },
+  {
+    "domain": "afisha.ru",
+    "classification": "safe",
+    "notes": "City/cultural listings",
+    "fastmode": true
+  },
+  {
+    "domain": "sport-express.ru",
+    "classification": "safe",
+    "notes": "Sports news",
+    "fastmode": true
+  },
+  {
+    "domain": "sobyanin.ru",
+    "classification": "safe",
+    "notes": "Official Russian/local politician site",
+    "fastmode": true
+  },
+  {
+    "domain": "banki.ru",
+    "classification": "safe",
+    "notes": "Finance portal",
+    "fastmode": true
+  },
+  {
+    "domain": "sbermarket.ru",
+    "classification": "safe",
+    "notes": "Grocery delivery (Sber)",
+    "fastmode": true
+  },
+  {
+    "domain": "delivery-club.ru",
+    "classification": "safe",
+    "notes": "Food delivery",
+    "fastmode": true
+  },
+  {
+    "domain": "rosreestr.gov.ru",
+    "classification": "safe",
+    "notes": "Land registry/government",
+    "fastmode": true
+  },
+  {
+    "domain": "rutracker.org",
+    "classification": "warn",
+    "notes": "Torrent tracker — previews might include explicit content or illegal material",
+    "fastmode": true
+  },
+  {
+    "domain": "yandex.images",
+    "classification": "moderate",
+    "notes": "Image search can surface NSFW images depending on query",
+    "fastmode": true
+  },
+  {
+    "domain": "bing.com",
+    "classification": "safe",
+    "notes": "Search engine (bing)",
+    "fastmode": true
+  },
+  {
+    "domain": "facebook.com",
+    "classification": "moderate",
+    "notes": "Social network; UGC",
+    "fastmode": true
+  },
+  {
+    "domain": "instagram.com",
+    "classification": "moderate",
+    "notes": "Image-driven; UGC can be NSFW",
+    "fastmode": true
+  },
+  {
+    "domain": "m.ok.ru",
+    "classification": "moderate",
+    "notes": "mobile variant",
+    "fastmode": true
+  },
+  {
+    "domain": "mail.ru",
+    "classification": "safe",
+    "notes": "news subdomain",
+    "fastmode": true
+  },
+  {
+    "domain": "soundcloud.com",
+    "classification": "other",
+    "notes": "audio platform",
+    "fastmode": true
+  },
+  {
+    "domain": "bandcamp.com",
+    "classification": "other",
+    "notes": "music sales platform",
+    "fastmode": true
+  },
+  {
+    "domain": "booking.com",
+    "classification": "safe",
+    "notes": "Travel/hotel bookings",
+    "fastmode": true
+  },
+  {
+    "domain": "airbnb.com",
+    "classification": "safe",
+    "notes": "Travel accomodation platform",
+    "fastmode": true
+  }
+]

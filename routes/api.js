@@ -1,5 +1,5 @@
 import express from "express";
-import { parseUrl } from "../services/linkParser.js";
+import { parseUrl } from "../previewGeneratorEngine/previewGenerator.js";
 import { createSingleFlightCache } from "../middleware/singleFlightCache.js";
 
 const router = express.Router();
