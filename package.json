@@ -26,7 +26,6 @@
     "metascraper-title": "^5.49.2",
     "metascraper-url": "^5.49.2",
     "morgan": "~1.9.1",
-    "pino": "^10.1.0",
     "pino-pretty": "^13.1.2",
     "pug": "2.0.0-beta11",
     "undici": "^7.16.0"
