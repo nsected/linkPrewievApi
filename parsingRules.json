@@ -408,6 +408,12 @@
     "fastmode": true
   },
   {
+    "domain": "render.com",
+    "classification": "safe",
+    "notes": "node js hosting",
+    "fastmode": true
+  },
+  {
     "domain": "riafan.ru",
     "classification": "safe",
     "notes": "News portal",

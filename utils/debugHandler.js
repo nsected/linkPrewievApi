@@ -12,6 +12,9 @@ const currentLevel = (process.env.DEBUG_LEVEL || DEFAULT_LEVEL).toLowerCase();
  * Internal: should we emit logs for `level` given currentLevel?
  */
 function shouldLog(level) {
+    if (process.env.DEBUG_LEVEL) {
+        return true
+    }
     const i = LOG_LEVELS.indexOf(level);
     const cur = LOG_LEVELS.indexOf(currentLevel);
     return i <= cur;
@@ -70,7 +73,6 @@ export function info(message, ...args) {
  * Use debug for step-by-step internal decisions. Use verbose for extreme detail (network bodies, full HTML dumps).
  */
 export function debug(message, ...args) {
-    return
     formatAndPrint("debug", message, ...args);
 }
 

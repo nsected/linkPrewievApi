@@ -129,7 +129,7 @@
             border-radius: 6px;
             overflow: hidden;
             display: flex;
-            max-width: 420px;
+            max-width: 600px;
             background: #111;
             color: #ddd;
             font-size: 13px;
@@ -141,8 +141,8 @@
             const img = document.createElement('img');
             img.src = meta.image;
             img.alt = meta.title || '';
-            img.style.width = '110px';
-            img.style.height = '70px';
+            img.style.width = '338px';
+            img.style.height = '152px';
             img.style.objectFit = 'cover';
             card.appendChild(img);
         } else {
