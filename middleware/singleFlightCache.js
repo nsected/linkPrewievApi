@@ -12,7 +12,7 @@ export function createSingleFlightCache(handler, { cacheSize = 300 } = {}) {
     const cache = new Map();
 
     function debug(...args) {
-        console.debug("[singleFlightCache]", ...args);
+        //console.debug("[singleFlightCache]", ...args);
     }
 
     function printState() {

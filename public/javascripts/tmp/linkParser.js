@@ -15,7 +15,7 @@ import * as cheerio from "cheerio";
 import { isDomainAllowed, getAllowedDomains } from ".isDomainInAllowed.js";
 
 // deprecated: todo moved below to unified debug()
-// console.log calls replaced with structured debug
+// console.appLog calls replaced with structured debug
 
 const scraper = metascraper([
     metascraperTitle(),
