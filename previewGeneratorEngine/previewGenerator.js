@@ -5,6 +5,7 @@ import { parseMetadata } from "./parseMetadata.js";
 import { getImage } from "./getImage.js";
 import parsingRulesList from "../parsingRules.json" with { type: "json" };
 import { getParsingRules } from "./parsingRulesManager.js";
+import { isYoutubeLink, fetchYoutubePreview } from "./youtubePreviewHandler.js";
 
 /**
  *  конвейер предпросмотра ссылок
@@ -12,6 +13,13 @@ import { getParsingRules } from "./parsingRulesManager.js";
  */
 export async function parseUrl(url) {
     debug(`🚀 [parseUrl] Starting pipeline for: ${url}`);
+
+    // 0️⃣ Если это YouTube — пробуем API
+    if (isYoutubeLink(url)) {
+        const youtubePreview = await fetchYoutubePreview(url);
+        if (youtubePreview) return youtubePreview;
+    }
+
     const rules = getParsingRules(url, parsingRulesList);
 
     if (rules.skipParsing) {

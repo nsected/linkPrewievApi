@@ -5,13 +5,13 @@
   "type": "module",
   "scripts": {
     "start": "node ./app.js",
-    "start_debug": "cross-env DEBUG_LEVEL=debug node ./app.js"
+    "start_verbose": "node --env-file=verbose.env ./app.js",
+    "start_debug": "node --env-file=debug.env  ./app.js"
   },
   "dependencies": {
     "cheerio": "^1.1.2",
     "cookie-parser": "~1.4.4",
     "cors": "^2.8.5",
-    "cross-env": "^10.1.0",
     "debug": "~2.6.9",
     "express": "~4.16.1",
     "got": "^14.4.9",
@@ -25,9 +25,6 @@
     "metascraper-publisher": "^5.49.2",
     "metascraper-title": "^5.49.2",
     "metascraper-url": "^5.49.2",
-    "morgan": "~1.9.1",
-    "pino-pretty": "^13.1.2",
-    "pug": "2.0.0-beta11",
-    "undici": "^7.16.0"
+    "morgan": "~1.9.1"
   }
 }

@@ -1,2 +1,5 @@
 /node_modules/
 /tmp/
+verbose.env
+debug.env
+/logs
