@@ -82,12 +82,6 @@ export async function getImage(html, url, metadata = {}, rules = {}) {
         }
     });
 
-    // e) иногда og:image/twitter:image используются как лого
-    $("meta[property='og:image'], meta[name='twitter:image']").each((_, el) => {
-        const content = $(el).attr("content");
-        if (content) candidates.push(content);
-    });
-
     // Преобразуем к абсолютным URL
     candidates = candidates
         .map((c) => safeResolve(c, url))
