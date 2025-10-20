@@ -414,6 +414,18 @@
     "fastmode": true
   },
   {
+    "domain": "rezka.ag",
+    "classification": "safe",
+    "notes": "kino",
+    "fastmode": true
+  },
+  {
+    "domain": "hdrezka.ag",
+    "classification": "safe",
+    "notes": "kino",
+    "fastmode": true
+  },
+  {
     "domain": "riafan.ru",
     "classification": "safe",
     "notes": "News portal",
@@ -529,7 +541,13 @@
   },
   {
     "domain": "rutracker.org",
-    "classification": "warn",
+    "classification": "safe",
+    "notes": "Torrent tracker — previews might include explicit content or illegal material",
+    "fastmode": true
+  },
+  {
+    "domain": "kinogo.ec",
+    "classification": "safe",
     "notes": "Torrent tracker — previews might include explicit content or illegal material",
     "fastmode": true
   },
