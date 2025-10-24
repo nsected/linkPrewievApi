@@ -1,6 +1,6 @@
-import { debug } from "../utils/debugHandler.js";
-import { truncate } from "../utils/helpers.js";
-import { fetchYoutubeMetadata } from "../utils/fetchYoutubeMetadata.js";
+import { debug } from "./debugHandler.js";
+import { truncate } from "./helpers.js";
+import { fetchYoutubeMetadata } from "./fetchYoutubeMetadata.js";
 
 /**
  * Проверяет, является ли URL ссылкой на YouTube-видео.

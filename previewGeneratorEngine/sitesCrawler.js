@@ -1,12 +1,15 @@
 // sitesCrawler.js
 import got from "got";
-import { StringDecoder } from "node:string_decoder";
+import { StringDecoder } from "node:string_decoder"; // deprecated: kept for compatibility comment only
 import { isFileUrl } from "../utils/helpers.js";
 import { appLog } from "../utils/logger.js"; // подключаем новый модуль логирования
+import iconv from "iconv-lite";
+import chardet from "chardet";
 
 const MAX_BUFFER = 10000000;
 const P_TEXT_THRESHOLD = 50;
 const H1_THRESHOLD = 20;
+const TIMEOUT = 20000;
 
 function getHeaders() {
     return {
@@ -14,12 +17,97 @@ function getHeaders() {
         "accept-encoding": "gzip, deflate, br",
         "accept-language": "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7",
         "cache-control": "no-cache",
-        "referer": "https://www.google.com/",
         "upgrade-insecure-requests": "1",
         "user-agent":
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
+            "Mozilla/5.0 (compatible; LinkPreviewBot/1.0; +https://linkprewievapi.onrender.com/)",
     };
 }
+
+async function decodeBufferSmart(buffer, headers = {}) {
+    // buffer: Buffer
+    // headers: response headers if available
+
+    // 1) try Content-Type header
+    const ctHeader = (headers["content-type"] || headers["Content-Type"] || "").toString();
+    let charset;
+    const ctMatch = ctHeader.match(/charset=([^;,\s]+)/i);
+    if (ctMatch && ctMatch[1]) {
+        charset = ctMatch[1].trim().toLowerCase();
+    }
+
+    // 2) try <meta charset=...> or <meta http-equiv="Content-Type" content="...; charset=...">
+    if (!charset) {
+        try {
+            // only look at the first chunk of bytes to avoid heavy decoding
+            const headSlice = buffer.slice(0, 4096);
+            // ascii safe for meta search
+            const headAscii = headSlice.toString("ascii");
+            const metaCharsetMatch = headAscii.match(/<meta[^>]*charset=["']?\s*([^"'>\s;]+)/i);
+            if (metaCharsetMatch && metaCharsetMatch[1]) {
+                charset = metaCharsetMatch[1].trim().toLowerCase();
+            } else {
+                const metaEquivMatch = headAscii.match(/<meta[^>]*content=["'][^"']*charset=([^"'>\s;]+)[^"']*["']/i);
+                if (metaEquivMatch && metaEquivMatch[1]) {
+                    charset = metaEquivMatch[1].trim().toLowerCase();
+                }
+            }
+        } catch (_) {
+            // ignore
+        }
+    }
+
+    // 3) fallback to chardet (gives e.g. 'UTF-8', 'windows-1251', 'ISO-8859-5', 'KOI8-R' etc.)
+    if (!charset) {
+        try {
+            const detected = chardet.detect(buffer);
+            if (detected) charset = detected.toString().toLowerCase();
+        } catch (_) {
+            // ignore
+        }
+    }
+
+    // default
+    charset = (charset || "utf-8").toString().toLowerCase();
+
+    // normalize common aliases
+    const aliasMap = {
+        "cp1251": "windows-1251",
+        "win1251": "windows-1251",
+        "windows1251": "windows-1251",
+        "utf8": "utf-8",
+        "latin1": "iso-8859-1",
+        "iso8859-1": "iso-8859-1",
+        "iso8859-5": "iso-8859-5",
+    };
+    if (aliasMap[charset]) charset = aliasMap[charset];
+
+    // final fallback: if iconv doesn't know the encoding, treat as utf-8
+    if (!iconv.encodingExists(charset)) {
+        charset = "utf-8";
+    }
+
+    try {
+        // decode using iconv-lite
+        return iconv.decode(buffer, charset);
+    } catch (e) {
+        // if decode failed, fallback to utf8 with replacement to avoid throwing
+        try {
+            return buffer.toString("utf8");
+        } catch (_) {
+            // ultimate fallback: return empty string
+            await appLog.error({
+                namespace: "crawler",
+                taskUrl: url,
+                message: "HTMP page decode failed",
+                level: "error",
+                payload: buffer,
+            });
+            return "";
+        }
+    }
+}
+
+
 
 /**
  * fetchHtml(url, { fastmode = true })
@@ -55,13 +143,16 @@ export async function fetchHtml(url, { fastmode = true } = {}) {
         });
 
         try {
-            const html = await got(url, {
+            const response = await got(url, {
                 headers: getHeaders(),
-                timeout: { request: 20000 },
+                timeout: { request: TIMEOUT},
                 retry: { limit: 2 },
                 followRedirect: true,
                 maxRedirects: 10,
-            }).text();
+                responseType: "buffer",
+            });
+            const html = await decodeBufferSmart(response.rawBody, response.headers);
+
 
             await appLog.debug({
                 namespace: "crawler",
@@ -97,15 +188,16 @@ export async function fetchHtml(url, { fastmode = true } = {}) {
 
     // --- STREAMED FETCH ---
     return new Promise((resolve, reject) => {
-        const decoder = new StringDecoder("utf8");
-        let buffer = "";
+        // deprecated: StringDecoder kept only as comment; do NOT use to decode non-utf8 pages
+        const decoder = new StringDecoder("utf8"); // deprecated: not used for decoding now
+        let chunks = []; // collect Buffers only
         let found = false;
         let streamClosed = false;
         let chunkCount = 0;
 
         const stream = got.stream(url, {
             headers: getHeaders(),
-            timeout: { request: 10000 },
+            timeout: { request: TIMEOUT },
             retry: { limit: 2 },
             followRedirect: true,
             maxRedirects: 10,
@@ -123,10 +215,10 @@ export async function fetchHtml(url, { fastmode = true } = {}) {
             "i"
         );
 
-        function extractJsonLdSnippet(buf) {
-            const idxOpen = buf.lastIndexOf("<script");
+        function extractJsonLdSnippet(decodedStr) {
+            const idxOpen = decodedStr.lastIndexOf("<script");
             if (idxOpen === -1) return null;
-            const part = buf.slice(idxOpen);
+            const part = decodedStr.slice(idxOpen);
             const m = part.match(
                 /<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/i
             );
@@ -142,126 +234,189 @@ export async function fetchHtml(url, { fastmode = true } = {}) {
 
         stream.on("data", async (chunk) => {
             if (found) return;
-            buffer += decoder.write(chunk);
+            // deprecated: using StringDecoder directly
+            // buffer += decoder.write(chunk);
+            chunks.push(chunk);
             chunkCount++;
+
+            // Build a small prefix for fast ASCII checks (avoid full concat often)
+            const prefixLen = Math.min(8192, chunks.reduce((s, b) => s + b.length, 0));
+            // For performance we can concat only when needed; but here we will create fullBuffer when checks require it.
+            // Quick ASCII scan for </head> using slice of accumulated bytes:
+            const accumulatedBuffer = Buffer.concat(chunks);
+            const asciiPrefix = accumulatedBuffer.slice(0, 4096).toString("ascii");
 
             if (debugMode && chunkCount % 10 === 0) {
                 await appLog.debug({
                     namespace: "crawler",
                     taskUrl: url,
-                    message: `📦 Received ${chunkCount} chunks (${buffer.length} chars so far)`,
-                    payload: buffer,
+                    message: `📦 Received ${chunkCount} chunks (${accumulatedBuffer.length} bytes so far)`,
+                    payload: asciiPrefix.slice(0, 1000),
                 });
             }
 
-            // Fastmode: stop at </head>
-            if (fastmode && reHeadClose.test(buffer)) {
+            // Fastmode: stop at </head> (ASCII scan is safe for tag detection)
+            if (fastmode && reHeadClose.test(asciiPrefix)) {
                 found = true;
                 stream.destroy();
-                await appLog.debug({
-                    namespace: "crawler",
-                    taskUrl: url,
-                    message: "⚡ Fastmode stop: </head> found",
-                    payload: buffer,
-                });
-                return resolve({
-                    type: "html",
-                    html: buffer,
-                    url,
-                    fastmode,
-                    fetchModeUsed: "fast",
-                    stopReason: "</head>",
-                });
-            }
-
-            // Optimized mode (fastmode = false)
-            const metaMatch = buffer.match(reMetaDesc);
-            if (metaMatch) {
-                found = true;
-                stream.destroy();
-                await appLog.debug({
-                    namespace: "crawler",
-                    taskUrl: url,
-                    message: "🧩 Optimized stop: meta description found",
-                    payload: buffer,
-                    extra: { description: metaMatch[1] },
-                });
-                return resolve({
-                    type: "html",
-                    html: buffer,
-                    url,
-                    fastmode,
-                    fetchModeUsed: "optimized",
-                    stopReason: "meta-description",
-                    metaDescription: metaMatch[1],
-                });
-            }
-
-            const jsonLd = extractJsonLdSnippet(buffer);
-            if (jsonLd) {
                 try {
-                    const arr = Array.isArray(jsonLd) ? jsonLd : [jsonLd];
-                    for (const item of arr) {
-                        if (item?.description || item?.headline) {
-                            found = true;
-                            stream.destroy();
-                            await appLog.debug({
-                                namespace: "crawler",
-                                taskUrl: url,
-                                message:
-                                    "🧩 Optimized stop: JSON-LD with description/headline found",
-                                payload: buffer,
-                                extra: { jsonLd: item },
-                            });
-                            return resolve({
-                                type: "html",
-                                html: buffer,
-                                url,
-                                fastmode,
-                                fetchModeUsed: "optimized",
-                                stopReason: "json-ld",
-                            });
+                    const fullBuffer = accumulatedBuffer; // already Buffer.concat result
+                    const decoded = await decodeBufferSmart(fullBuffer, stream.response?.headers || {});
+                    await appLog.debug({
+                        namespace: "crawler",
+                        taskUrl: url,
+                        message: "⚡ Fastmode stop: </head> found",
+                        payload: decoded.slice(0, 1000),
+                    });
+                    return resolve({
+                        type: "html",
+                        html: decoded,
+                        url,
+                        fastmode,
+                        fetchModeUsed: "fast",
+                        stopReason: "</head>",
+                    });
+                } catch (e) {
+                    await appLog.warn({
+                        namespace: "crawler",
+                        taskUrl: url,
+                        message: `⚠️ Fastmode decode failed: ${e.message}`,
+                        extra: { stack: e.stack },
+                    });
+                    // fallback: return asciiPrefix as best-effort
+                    return resolve({
+                        type: "html",
+                        html: asciiPrefix,
+                        url,
+                        fastmode,
+                        fetchModeUsed: "fast",
+                        stopReason: "</head>",
+                    });
+                }
+            }
+
+            // For optimized checks we need a decoded string to search meta/JSON-LD/p/h1 reliably.
+            // Decode current accumulated buffer (costly but necessary for correctness)
+            let decodedStr;
+            try {
+                const fullBuffer = accumulatedBuffer;
+                decodedStr = await decodeBufferSmart(fullBuffer, stream.response?.headers || {});
+            } catch (e) {
+                decodedStr = null;
+            }
+
+            if (decodedStr) {
+                // meta-description
+                const metaMatch = decodedStr.match(reMetaDesc);
+                if (metaMatch) {
+                    found = true;
+                    stream.destroy();
+                    await appLog.debug({
+                        namespace: "crawler",
+                        taskUrl: url,
+                        message: "🧩 Optimized stop: meta description found",
+                        payload: decodedStr,
+                        extra: { description: metaMatch[1] },
+                    });
+                    return resolve({
+                        type: "html",
+                        html: decodedStr,
+                        url,
+                        fastmode,
+                        fetchModeUsed: "optimized",
+                        stopReason: "meta-description",
+                        metaDescription: metaMatch[1],
+                    });
+                }
+
+                // JSON-LD
+                const jsonLd = extractJsonLdSnippet(decodedStr);
+                if (jsonLd) {
+                    try {
+                        const arr = Array.isArray(jsonLd) ? jsonLd : [jsonLd];
+                        for (const item of arr) {
+                            if (item?.description || item?.headline) {
+                                found = true;
+                                stream.destroy();
+                                await appLog.debug({
+                                    namespace: "crawler",
+                                    taskUrl: url,
+                                    message: "🧩 Optimized stop: JSON-LD with description/headline found",
+                                    payload: decodedStr,
+                                    extra: { jsonLd: item },
+                                });
+                                return resolve({
+                                    type: "html",
+                                    html: decodedStr,
+                                    url,
+                                    fastmode,
+                                    fetchModeUsed: "optimized",
+                                    stopReason: "json-ld",
+                                });
+                            }
                         }
-                    }
-                } catch (_) {}
+                    } catch (_) { /* ignore JSON-LD parse issues */ }
+                }
+
+                // meaningful <p> or <h1>
+                if (rePMeaningful.test(decodedStr) || reH1Meaningful.test(decodedStr)) {
+                    found = true;
+                    stream.destroy();
+                    await appLog.debug({
+                        namespace: "crawler",
+                        taskUrl: url,
+                        message: "🧩 Optimized stop: meaningful <p> or <h1> found",
+                        payload: decodedStr,
+                    });
+                    return resolve({
+                        type: "html",
+                        html: decodedStr,
+                        url,
+                        fastmode,
+                        fetchModeUsed: "optimized",
+                        stopReason: "meaningful-text",
+                    });
+                }
             }
 
-            if (rePMeaningful.test(buffer) || reH1Meaningful.test(buffer)) {
+            // size limit (we can test by accumulatedBuffer length)
+            const accumulatedLength = accumulatedBuffer.length;
+            if (accumulatedLength > MAX_BUFFER) {
                 found = true;
                 stream.destroy();
-                await appLog.debug({
-                    namespace: "crawler",
-                    taskUrl: url,
-                    message: "🧩 Optimized stop: meaningful <p> or <h1> found",
-                    payload: buffer,
-                });
-                return resolve({
-                    type: "html",
-                    html: buffer,
-                    url,
-                    fastmode,
-                    fetchModeUsed: "optimized",
-                    stopReason: "meaningful-text",
-                });
-            }
-
-            if (buffer.length > MAX_BUFFER) {
-                found = true;
-                stream.destroy();
-                await appLog.warn({
-                    namespace: "crawler",
-                    taskUrl: url,
-                    message: `⚠️ Optimized fetch limit reached (${buffer.length} chars)`,
-                    payload: buffer,
-                });
-                return resolve({
-                    type: "partial",
-                    html: buffer,
-                    url,
-                    fastmode,
-                    fetchModeUsed: "optimized",
-                    stopReason: "size-limit",
-                });
+                try {
+                    const fullBuffer = accumulatedBuffer;
+                    const decoded = await decodeBufferSmart(fullBuffer, stream.response?.headers || {});
+                    await appLog.warn({
+                        namespace: "crawler",
+                        taskUrl: url,
+                        message: `⚠️ Optimized fetch limit reached (${fullBuffer.length} bytes)`,
+                        payload: decoded.slice(0, 1000),
+                    });
+                    return resolve({
+                        type: "partial",
+                        html: decoded,
+                        url,
+                        fastmode,
+                        fetchModeUsed: "optimized",
+                        stopReason: "size-limit",
+                    });
+                } catch (e) {
+                    await appLog.warn({
+                        namespace: "crawler",
+                        taskUrl: url,
+                        message: `⚠️ Size-limit decode failed: ${e.message}`,
+                        extra: { stack: e.stack },
+                    });
+                    return resolve({
+                        type: "partial",
+                        html: accumulatedBuffer.toString("utf8"),
+                        url,
+                        fastmode,
+                        fetchModeUsed: "optimized",
+                        stopReason: "size-limit",
+                    });
+                }
             }
         });
 
@@ -271,8 +426,8 @@ export async function fetchHtml(url, { fastmode = true } = {}) {
             await appLog.error({
                 namespace: "crawler",
                 taskUrl: url,
-                message: `❌ Stream error: ${err.message}`,
-                payload: buffer,
+                message: `❌ Stream error: ${err.message}, raw binary: `,
+                payload: err,
                 extra: { stack: err.stack },
             });
             reject({
@@ -287,20 +442,39 @@ export async function fetchHtml(url, { fastmode = true } = {}) {
         stream.on("end", async () => {
             if (streamClosed) return;
             streamClosed = true;
-            await appLog.debug({
-                namespace: "crawler",
-                taskUrl: url,
-                message: `🔚 Stream ended, returning accumulated HTML (${buffer.length} chars, ${chunkCount} chunks)`,
-                payload: buffer,
-            });
-            resolve({
-                type: "html",
-                html: buffer,
-                url,
-                fastmode,
-                fetchModeUsed: "optimized",
-                stopReason: "stream-end",
-            });
+            const fullBuffer = Buffer.concat(chunks);
+            try {
+                const decoded = await decodeBufferSmart(fullBuffer, stream.response?.headers || {});
+                await appLog.debug({
+                    namespace: "crawler",
+                    taskUrl: url,
+                    message: `🔚 Stream ended, returning accumulated HTML (${decoded.length} chars, ${chunkCount} chunks)`,
+                    payload: decoded,
+                });
+                resolve({
+                    type: "html",
+                    html: decoded,
+                    url,
+                    fastmode,
+                    fetchModeUsed: "optimized",
+                    stopReason: "stream-end",
+                });
+            } catch (e) {
+                await appLog.warn({
+                    namespace: "crawler",
+                    taskUrl: url,
+                    message: `⚠️ Final decode failed: ${e.message}, returning raw utf8 string fallback`,
+                    extra: { stack: e.stack },
+                });
+                resolve({
+                    type: "html",
+                    html: fullBuffer.toString("utf8"),
+                    url,
+                    fastmode,
+                    fetchModeUsed: "optimized",
+                    stopReason: "stream-end",
+                });
+            }
         });
     });
 }

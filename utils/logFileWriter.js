@@ -39,7 +39,9 @@ async function flushQueue() {
         const { filePath, content } = queue.shift();
         try {
             await fs.writeFile(filePath, content, 'utf-8');
-            console.log(`📄 [file-writer] Saved payload → ${filePath}`);
+            const normalizedPath = filePath.replace(/\\/g, '/');
+            console.log(`📄 [file-writer] Saved payload → file:///${normalizedPath}`);
+
         } catch (err) {
             console.error('[file-writer] Failed to write payload:', err);
         }

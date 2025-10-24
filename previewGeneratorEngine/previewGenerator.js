@@ -5,7 +5,8 @@ import { parseMetadata } from "./parseMetadata.js";
 import { getImage } from "./getImage.js";
 import parsingRulesList from "../parsingRules.json" with { type: "json" };
 import { getParsingRules } from "./parsingRulesManager.js";
-import { isYoutubeLink, fetchYoutubePreview } from "./youtubePreviewHandler.js";
+import { isYoutubeLink, fetchYoutubePreview } from "../utils/youtubePreviewHandler.js";
+import { isKinopoiskLink, fetchKinopoiskPreview } from "../utils/kinopoiskPreviewHandler.js";
 
 /**
  *  конвейер предпросмотра ссылок
@@ -19,6 +20,12 @@ export async function parseUrl(url) {
         const youtubePreview = await fetchYoutubePreview(url);
         if (youtubePreview) return youtubePreview;
     }
+
+    if (isKinopoiskLink(url)) {
+        const kinopoiskPreview = await fetchKinopoiskPreview(url);
+        if (kinopoiskPreview) return kinopoiskPreview;
+    }
+
 
     const rules = getParsingRules(url, parsingRulesList);
 

@@ -12,15 +12,17 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3002;
 
-// ✅ Разрешаем запросы только с нужного домена
-app.use(cors({
-  origin: "https://tv.2ch.su",           // можно добавить массив origins, если нужно
-  methods: ["GET", "OPTIONS"],
+const corsOptions = {
+  origin: "https://tv.2ch.su",
+  methods: ["GET", "OPTIONS", "POST"],
   allowedHeaders: ["Content-Type"],
-}));
+};
+
+// ✅ Разрешаем запросы только с нужного домена
+app.use(cors(corsOptions));
 
 // ✅ Обработка preflight-запросов (OPTIONS)
-app.options("*", cors());
+app.options("*", cors(corsOptions));
 
 // статические файлы (css, js, изображения)
 app.use(express.static(path.join(__dirname, "public")));

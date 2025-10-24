@@ -3,6 +3,8 @@ import got from "got";
 import * as cheerio from "cheerio";
 import { debug } from "../utils/debugHandler.js";
 import { extractDomain } from "../utils/helpers.js";
+import { appLog } from "../utils/logger.js";
+import tls from "tls";
 
 /**
  * @module getImage
@@ -125,13 +127,75 @@ function safeResolve(candidate, base) {
 /** Проверяет, существует ли favicon */
 async function faviconExists(faviconUrl) {
     try {
-        const res = await got.head(faviconUrl, { timeout: { request: 3000 } });
+        appLog.debug(`🟡 Проверка favicon: ${faviconUrl}`);
+
+        const res = await got.head(faviconUrl, {
+            timeout: { request: 3000 },
+            followRedirect: true,
+            throwHttpErrors: false
+        });
+
         const type = (res.headers["content-type"] || "").toLowerCase();
+        appLog.debug(`🧩 favicon HEAD → status=${res.statusCode}, type=${type || "—"}`);
+
+        // Если HEAD не дал полезной информации — пробуем GET
+        if (res.statusCode === 405 || !type) {
+            appLog.warn(`⚠️ HEAD не дал информацию (status=${res.statusCode}), пробуем GET`);
+            const resGet = await got.get(faviconUrl, {
+                timeout: { request: 3000 },
+                followRedirect: true,
+                throwHttpErrors: false
+            });
+            const typeGet = (resGet.headers["content-type"] || "").toLowerCase();
+            appLog.debug(`🧩 favicon GET → status=${resGet.statusCode}, type=${typeGet || "—"}`);
+            return resGet.statusCode === 200 && typeGet.startsWith("image/");
+        }
+
         return res.statusCode === 200 && type.startsWith("image/");
-    } catch {
+    } catch (err) {
+        appLog.error(`❌ Ошибка при проверке favicon ${faviconUrl}: ${err.name} — ${err.message}`);
+
+        // Если это проблема TLS/SSL (сервер старый/несовместимый) — попробуем HTTP fallback
+        const isSslProtocolError =
+            err.code === "EPROTO" ||
+            /unsupported protocol|ssl_choose_client_version|SSL routines|tlsv1 alert protocol version/i.test(
+                err.message || ""
+            );
+
+        if (isSslProtocolError && faviconUrl.startsWith("https:")) {
+            const httpUrl = faviconUrl.replace(/^https:/, "http:");
+            try {
+                appLog.warn(`➡️ SSL protocol error, пытаемся HTTP fallback: ${httpUrl}`);
+                const res2 = await got.head(httpUrl, {
+                    timeout: { request: 3000 },
+                    followRedirect: true,
+                    throwHttpErrors: false
+                });
+                const type2 = (res2.headers["content-type"] || "").toLowerCase();
+                appLog.debug(`🧩 favicon HTTP HEAD → status=${res2.statusCode}, type=${type2 || "—"}`);
+
+                if (res2.statusCode === 405 || !type2) {
+                    const resGet2 = await got.get(httpUrl, {
+                        timeout: { request: 3000 },
+                        followRedirect: true,
+                        throwHttpErrors: false
+                    });
+                    const typeGet2 = (resGet2.headers["content-type"] || "").toLowerCase();
+                    appLog.debug(`🧩 favicon HTTP GET → status=${resGet2.statusCode}, type=${typeGet2 || "—"}`);
+                    return resGet2.statusCode === 200 && typeGet2.startsWith("image/");
+                }
+
+                return res2.statusCode === 200 && type2.startsWith("image/");
+            } catch (err2) {
+                appLog.error(`❌ HTTP fallback failed for ${httpUrl}: ${err2.name} — ${err2.message}`);
+            }
+        }
+
         return false;
     }
 }
+
+
 
 /** Выбирает лучший кандидат по расширению (svg > png > webp > jpg > jpeg > ico) */
 function selectBestCandidate(candidates) {
