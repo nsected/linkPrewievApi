@@ -52,7 +52,7 @@ export function getParsingRules(
         if (!rule) {
             finalSkipParsing = true;
         }
-    } else {
+    }
         // blacklist mode → блокируем домены из blockedDomains
         const normalizedDomain = domain.toLowerCase().replace(/^www\./, "");
         const isBlocked = blockedDomains.some(bd => {
@@ -62,7 +62,7 @@ export function getParsingRules(
         if (isBlocked) {
             finalSkipParsing = true;
         }
-    }
+
 
     return {
         domain,
