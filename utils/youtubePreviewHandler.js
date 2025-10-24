@@ -14,7 +14,7 @@ import { fetchYoutubeMetadata } from "./fetchYoutubeMetadata.js";
  * @returns {boolean}
  */
 export function isYoutubeLink(url) {
-    return /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\//i.test(url);
+    return /^(https?:\/\/)?(www\.|m\.|music\.)?(youtube\.com|youtu\.be)\//i.test(url);
 }
 
 /**

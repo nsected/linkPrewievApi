@@ -1,4 +1,54 @@
-// logger/index.js
+// logger.js
+/**
+ * @module logger
+ * @description
+ * Модуль централизованного логирования с цветным консольным выводом,
+ * автоматическим сохранением JSON-логов и поддержкой многоуровневой градации важности сообщений.
+ *
+ * ⚙️ **Основные функции и особенности:**
+ *
+ * 1️⃣ Цветной иконографический вывод сообщений в консоль по уровням важности:
+ *     TRACE → VERBOSE → DEBUG → INFO → WARN → ERROR → FATAL
+ * 2️⃣ Гибкая фильтрация по переменным окружения: `LOG_LEVEL`, `DEBUG_LEVEL` или `LOGLEVEL`.
+ * 3️⃣ Автоматическое создание директорий `./logs` и `./logs/html`.
+ * 4️⃣ Сохранение подробных JSON-записей в файл `./logs/app.log`.
+ * 5️⃣ Сохранение крупных payload-ов (>500 символов) через `enqueuePayload()` в отдельные файлы.
+ * 6️⃣ Возможность создавать дочерние логгеры с собственными namespace и метаданными.
+ *
+ * 🧩 **Использование:**
+ * ```js
+ * import { appLog } from './logger/index.js';
+ *
+ * await appLog.info('Сервис запущен');
+ * await appLog.debug({ namespace: 'crawler', taskUrl: 'https://example.com' }, 'Задача началась');
+ *
+ * const crawlerLog = appLog.child({ namespace: 'crawler' });
+ * await crawlerLog.error({ taskUrl: 'https://example.com' }, 'Ошибка загрузки страницы');
+ * ```
+ *
+ * @typedef {Object} LogContext
+ * @property {string} [message] — Текстовое сообщение лога.
+ * @property {string} [namespace] — Пространство имён или имя подсистемы.
+ * @property {string} [taskUrl] — Ссылка, относящаяся к задаче или событию.
+ * @property {Object} [taskParams] — Дополнительные параметры задачи.
+ * @property {Object} [extra] — Произвольные дополнительные данные.
+ * @property {string} [payload] — Дополнительный текст (сохраняется отдельно при размере >500 символов).
+ * @property {string} [file] — Путь к сохранённому файлу payload (добавляется автоматически).
+ *
+ * @typedef {Object} Logger
+ * @property {(ctx?: LogContext|string, msg?: string) => Promise<void>} trace — Лог уровня TRACE (низкоуровневая отладка).
+ * @property {(ctx?: LogContext|string, msg?: string) => Promise<void>} verbose — Лог уровня VERBOSE (подробная трассировка).
+ * @property {(ctx?: LogContext|string, msg?: string) => Promise<void>} debug — Лог уровня DEBUG (отладочная информация).
+ * @property {(ctx?: LogContext|string, msg?: string) => Promise<void>} info — Лог уровня INFO (основные события приложения).
+ * @property {(ctx?: LogContext|string, msg?: string) => Promise<void>} warn — Лог уровня WARN (предупреждения).
+ * @property {(ctx?: LogContext|string, msg?: string) => Promise<void>} error — Лог уровня ERROR (ошибки выполнения).
+ * @property {(ctx?: LogContext|string, msg?: string) => Promise<void>} fatal — Лог уровня FATAL (критические сбои).
+ * @property {(bindings?: Object) => Logger} child — Создаёт дочерний логгер с новыми значениями по умолчанию.
+ *
+ * @param {Object} [namespaceDefaults={}] — Значения, которые будут автоматически добавляться в каждый лог-вызов (например `{ namespace: 'crawler' }`).
+ * @returns {Logger} — Объект-логгер с методами для каждого уровня и методом `child()`.
+ */
+
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";

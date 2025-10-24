@@ -4,33 +4,42 @@ import { fetchHtml } from "./sitesCrawler.js";
 import { parseMetadata } from "./parseMetadata.js";
 import { getImage } from "./getImage.js";
 import parsingRulesList from "../parsingRules.json" with { type: "json" };
+import blockedDomains from "../blockedDomains.json" with { type: "json" };
 import { getParsingRules } from "./parsingRulesManager.js";
 import { isYoutubeLink, fetchYoutubePreview } from "../utils/youtubePreviewHandler.js";
 import { isKinopoiskLink, fetchKinopoiskPreview } from "../utils/kinopoiskPreviewHandler.js";
+import { appLog } from "../utils/logger.js";
 
 /**
  *  конвейер предпросмотра ссылок
  *  URL → HTML → Metadata → Image → Preview Object
  */
 export async function parseUrl(url) {
-    debug(`🚀 [parseUrl] Starting pipeline for: ${url}`);
+    const log = appLog.child({ namespace: "parseUrl" });
+    await appLog.info({taskUrl: url, message: "🚀 Starting pipeline"})
+    const blacklistMode = String(process.env.BLACKLISTMODE).toLowerCase() === "true";
+    const whitelistMode = !blacklistMode;
+    const rules = getParsingRules(url, parsingRulesList, blockedDomains, whitelistMode);
+    console.log(blacklistMode, JSON.stringify(rules))
+    await appLog.info({taskUrl: url, message: `whitelistMode: ${whitelistMode} Parsing rules:`, extra: rules}  )
+    if (rules.skipParsing) {
+        return {
+            message: 'Skip parsing because of rules',
+            rules: rules,
+            whitelistMode: whitelistMode,
+            blacklistMode: blacklistMode
+        }
+    }
 
     // 0️⃣ Если это YouTube — пробуем API
     if (isYoutubeLink(url)) {
         const youtubePreview = await fetchYoutubePreview(url);
-        if (youtubePreview) return youtubePreview;
+        return youtubePreview;
     }
 
     if (isKinopoiskLink(url)) {
         const kinopoiskPreview = await fetchKinopoiskPreview(url);
-        if (kinopoiskPreview) return kinopoiskPreview;
-    }
-
-
-    const rules = getParsingRules(url, parsingRulesList);
-
-    if (rules.skipParsing) {
-        return { url, note: "Skipped because file link", rules };
+        return kinopoiskPreview;
     }
 
     try {
@@ -61,7 +70,8 @@ export async function parseUrl(url) {
         debug("🏁 Pipeline complete:", preview);
         return preview;
     } catch (err) {
-        debug(`❌ [parseUrl] Pipeline failed: ${err.message}`);
-        return { url, error: err.message };
+        console.error(`❌ [parseUrl] Pipeline failed for ${url}`);
+        console.error(err.stack || err);
+        return 'test'
     }
 }
