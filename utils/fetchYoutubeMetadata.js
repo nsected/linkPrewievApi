@@ -88,7 +88,7 @@ export async function fetchYoutubeMetadata(videoUrl) {
         await appLog.debug({
             namespace,
             msg: "✅ Ответ YouTube API получен",
-            payload: response,
+            payload: response.body,
             extra: { statusCode: response.statusCode, itemCount: response.body.items?.length || 0 },
         });
 
