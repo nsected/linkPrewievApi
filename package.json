@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node ./app.js",
     "start_verbose": "node --env-file=verbose.env ./app.js",
-    "start_debug": "node --env-file=debug.env  ./app.js"
+    "start_debug": "node --env-file=debug.env  ./app.js",
+    "start_debug_whitelist": "node --env-file=debugWhitelist.env  ./app.js"
   },
   "dependencies": {
     "chardet": "^2.1.0",

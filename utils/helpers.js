@@ -29,14 +29,30 @@ export function extractDomain(url) {
  * @param {string} domain — домен из URL (например, "m.yandex.ru")
  * @param {Array} parsingRulesList — массив правил из parsingRules.json
  * @returns {boolean} true, если домен или его поддомен есть в списке правил
+ * Если найдено правило с posterAllowed === false, возвращает false
  */
 export function isPosterAllowed(domain, parsingRulesList = []) {
     if (!domain || !Array.isArray(parsingRulesList)) return false;
 
     const normalized = domain.trim().toLowerCase().replace(/^www\./, "");
-    return parsingRulesList.some(rule => {
+
+    // Поиск соответствующего правила
+    const matchedRule = parsingRulesList.find(rule => {
         const base = rule.domain.trim().toLowerCase().replace(/^www\./, "");
         // Прямое совпадение или поддомен
         return normalized === base || normalized.endsWith(`.${base}`);
     });
+
+    // Если найдено правило и явно запрещено — вернуть false
+    if (matchedRule && matchedRule.posterAllowed === false) {
+        return false;
+    }
+
+    // Если правило найдено, но запрета нет — постер разрешён
+    if (matchedRule) {
+        return true;
+    }
+
+    // Нет правил — по умолчанию false (постеры не разрешены)
+    return false;
 }

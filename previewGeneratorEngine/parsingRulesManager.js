@@ -5,7 +5,7 @@ import { extractDomain, isFileUrl, isPosterAllowed } from "../utils/helpers.js";
  * @param {string} url — ссылка на страницу
  * @param {Array} parsingRulesList — список правил из parsingRules.json
  * @param {Array} [blockedDomains=[]] — список доменов, запрещённых к парсингу
- * @param {boolean} [whitelistMode=false] — если true, парсить только домены из parsingRulesList
+ * @param {boolean} [whitelistMode=false] — если true, парсит только домены из parsingRulesList
  * @returns {{
  *   domain: string|null,
  *   fastmode: boolean,
@@ -46,10 +46,12 @@ export function getParsingRules(
 
     // new: whitelist / blacklist логика
     let finalSkipParsing = skipParsing;
-
+    let domainFoundInRules = false;
     if (whitelistMode) {
         // whitelist mode → парсим только домены, которые есть в parsingRulesList
-        if (!rule) {
+        if (rule) {
+            domainFoundInRules = true
+        } else {
             finalSkipParsing = true;
         }
     }
@@ -69,6 +71,7 @@ export function getParsingRules(
         fastmode,
         classification,
         posterAllowed,
+        domainFoundInRules,
         skipParsing: finalSkipParsing
     };
 }

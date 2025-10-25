@@ -210,6 +210,11 @@
     "fastmode": true
   },
   {
+    "domain": "2ch.su",
+    "fastmode": true,
+    "posterAllowed": false
+  },
+  {
     "domain": "yandex.com",
     "classification": "safe",
     "notes": "Yandex international/search",
