@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": "22.22.2"
+  },
   "scripts": {
     "start": "node ./app.js",
     "start_verbose": "node --env-file=verbose.env ./app.js",
