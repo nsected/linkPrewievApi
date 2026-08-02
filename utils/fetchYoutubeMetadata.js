@@ -1,5 +1,5 @@
 import got from "got";
-import { appLog } from "../utils/logger.js";
+import { appLog } from "./logger.js";
 
 /**
  * @module fetchYoutubeMetadata

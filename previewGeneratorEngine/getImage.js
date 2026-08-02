@@ -4,7 +4,7 @@ import * as cheerio from "cheerio";
 import { debug } from "../utils/debugHandler.js";
 import { extractDomain } from "../utils/helpers.js";
 import { appLog } from "../utils/logger.js";
-import tls from "tls";
+//import tls from "tls";
 
 /**
  * @module getImage
