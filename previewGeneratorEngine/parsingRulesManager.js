@@ -6,12 +6,14 @@ import { extractDomain, isFileUrl, isPosterAllowed } from "../utils/helpers.js";
  * @param {Array} parsingRulesList — список правил из parsingRules.json
  * @param {Array} [blockedDomains=[]] — список доменов, запрещённых к парсингу
  * @param {boolean} [whitelistMode=false] — если true, парсит только домены из parsingRulesList
+ * @param {boolean} [isPostersOnByDefault=false] — если true, постеры разрешены для всех
  * @returns {{
  *   domain: string|null,
  *   fastmode: boolean,
  *   classification: string,
  *   posterAllowed: boolean,
- *   skipParsing: boolean
+ *   skipParsing: boolean,
+ *   isPostersOnByDefault: boolean
  * }}
  */
 export function getParsingRules(
@@ -28,6 +30,8 @@ export function getParsingRules(
     if (!domain) {
         return {
             domain: null,
+            onlyPoster: false,
+            isPostersOnByDefault: false,
             fastmode: true,
             classification: "unknown",
             posterAllowed: false,
@@ -43,6 +47,7 @@ export function getParsingRules(
     });
 
     const fastmode = rule?.fastmode ?? true;
+    const onlyPoster = rule?.onlyPoster ?? false;
     const classification = rule?.classification ?? "unknown";
     const posterAllowed = isPosterAllowed(domain, parsingRulesList, isPostersOnByDefault);
 
@@ -74,6 +79,8 @@ export function getParsingRules(
         classification,
         posterAllowed,
         domainFoundInRules,
+        isPostersOnByDefault,
+        onlyPoster,
         skipParsing: finalSkipParsing
     };
 }

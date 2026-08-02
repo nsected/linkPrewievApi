@@ -54,7 +54,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { enqueuePayload } from "./logFileWriter.js";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+//const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // --- LEVELS & COLORS ---
 const LOG_LEVELS = {
@@ -128,14 +128,14 @@ function createLogger(namespaceDefaults = {}) {
 
         const emoji = emojiFor(level);
         const color = COLORS[level] || COLORS.reset;
-        const reset = COLORS.reset;
+        //const reset = COLORS.reset;
         const ns = record.namespace ? `[${record.namespace}]` : "";
         const url = record.taskUrl ? `(${record.taskUrl})` : "";
         const taskParams = record.taskParams ? record.taskParams : {};
         const extra = record.extra ? record.extra : {};
         const timestamp = new Date().toISOString();
 
-        const consoleMsg = `${color}${emoji} [${level.toUpperCase()}] ${timestamp} ${ns}${url} ${message}${JSON.stringify(taskParams)}${JSON.stringify(extra)}{reset}`;
+        const consoleMsg = `${color}${emoji} [${level.toUpperCase()}] ${timestamp} ${ns}${url} ${message}${Object.keys(taskParams).length ? JSON.stringify(taskParams) : ''}${Object.keys(extra).length ? JSON.stringify(extra) : ''}`;
         console.log(consoleMsg);
         var { payload } = record;
         payload = consoleMsg + '\n'+ payload;

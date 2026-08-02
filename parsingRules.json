@@ -1,5 +1,12 @@
 [
   {
+    "domain": "tenor.com",
+    "classification": "safe",
+    "notes": "Search gifs",
+    "fastmode": true,
+    "onlyPoster": true
+  },
+  {
     "domain": "yandex.ru",
     "classification": "safe",
     "notes": "Search & editorial services (Yandex)",

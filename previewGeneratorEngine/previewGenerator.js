@@ -1,27 +1,27 @@
-import { debug } from "../utils/debugHandler.js";
-import { truncate } from "../utils/helpers.js";
-import { fetchHtml } from "./sitesCrawler.js";
-import { parseMetadata } from "./parseMetadata.js";
-import { getImage } from "./getImage.js";
-import parsingRulesList from "../parsingRules.json" with { type: "json" };
-import blockedDomains from "../blockedDomains.json" with { type: "json" };
-import { getParsingRules } from "./parsingRulesManager.js";
-import { isYoutubeLink, fetchYoutubePreview } from "../utils/youtubePreviewHandler.js";
-import { isKinopoiskLink, fetchKinopoiskPreview } from "../utils/kinopoiskPreviewHandler.js";
-import { appLog } from "../utils/logger.js";
+import {debug} from "../utils/debugHandler.js";
+import {truncate} from "../utils/helpers.js";
+import {fetchHtml} from "./sitesCrawler.js";
+import {parseMetadata} from "./parseMetadata.js";
+import {getImage} from "./getImage.js";
+import parsingRulesList from "../parsingRules.json" with {type: "json"};
+import blockedDomains from "../blockedDomains.json" with {type: "json"};
+import {getParsingRules} from "./parsingRulesManager.js";
+import {fetchYoutubePreview, isYoutubeLink} from "../utils/youtubePreviewHandler.js";
+import {fetchKinopoiskPreview, isKinopoiskLink} from "../utils/kinopoiskPreviewHandler.js";
+import {appLog} from "../utils/logger.js";
 
 /**
  *  конвейер предпросмотра ссылок
  *  URL → HTML → Metadata → Image → Preview Object
  */
 export async function parseUrl(url) {
-    const log = appLog.child({ namespace: "parseUrl" });
+    //const log = appLog.child({ namespace: "parseUrl" });
     await appLog.info({taskUrl: url, message: "🚀 Starting pipeline"})
     const blacklistMode = String(process.env.BLACKLISTMODE).toLowerCase() === "true";
     const whitelistMode = String(process.env.WHITELISTMODE).toLowerCase() === "true";
     const isPostersOnByDefault = String(process.env.IS_POSTERS_ON_BY_DEFAULT).toLowerCase() === "true";
     const rules = getParsingRules(url, parsingRulesList, blockedDomains, whitelistMode, isPostersOnByDefault);
-    console.log(blacklistMode, JSON.stringify(rules))
+    //console.log(blacklistMode, JSON.stringify(rules))
     await appLog.info({taskUrl: url, message: `whitelistMode: ${whitelistMode} Parsing rules:`, extra: rules}  )
     if (rules.skipParsing) {
         return {
@@ -34,13 +34,11 @@ export async function parseUrl(url) {
 
     // 0️⃣ Если это YouTube — пробуем API
     if (isYoutubeLink(url)) {
-        const youtubePreview = await fetchYoutubePreview(url);
-        return youtubePreview;
+        return await fetchYoutubePreview(url);
     }
 
     if (isKinopoiskLink(url)) {
-        const kinopoiskPreview = await fetchKinopoiskPreview(url);
-        return kinopoiskPreview;
+        return await fetchKinopoiskPreview(url);
     }
 
     try {
@@ -59,12 +57,12 @@ export async function parseUrl(url) {
 
         // 3️⃣ Подбираем изображение
         const image = await getImage(html, url, metadata, rules);
-
+        const onlyPoster = rules.onlyPoster
         // 4️⃣ Собираем финальный объект
         const preview = {
             url,
-            title: truncate(metadata.title, 100),
-            description: truncate(metadata.description, 200),
+            title: onlyPoster ? "" : truncate(metadata.title, 100),
+            description: onlyPoster ? "" : truncate(metadata.description, 200),
             image,
         };
 

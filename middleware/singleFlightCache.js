@@ -58,7 +58,7 @@ export function createSingleFlightCache(handler, { cacheSize = 300 } = {}) {
         await printState();
     }
 
-    return async function singleFlightCacheMiddleware(req, res, next) {
+    return async function singleFlightCacheMiddleware(req, res) {
         const { url } = req.query;
 
         if (!url) {
@@ -100,7 +100,7 @@ export function createSingleFlightCache(handler, { cacheSize = 300 } = {}) {
         }
 
         // 3️⃣ Запуск нового промиса
-        await log.info({ taskUrl: url, message: "🚀 Starting new handler execution" });
+        await log.debug({ taskUrl: url, message: "🚀 Starting new handler execution" });
 
         const promise = (async () => {
             try {

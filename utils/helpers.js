@@ -28,7 +28,8 @@ export function extractDomain(url) {
  * Проверяет, разрешён ли постер для домена или поддомена
  * @param {string} domain — домен из URL (например, "m.yandex.ru")
  * @param {Array} parsingRulesList — массив правил из parsingRules.json
- * @returns {boolean} true, если домен или его поддомен есть в списке правил
+ * @param {boolean} isPostersOnByDefault — разрешены ли постеры по умолчанию в переменной окружения
+ * @returns {boolean} true, если домен или его поддомен есть в списке правил или isPostersOnByDefault в переменной окружения задан true
  * Если найдено правило с posterAllowed === false, возвращает false
  */
 export function isPosterAllowed(domain, parsingRulesList = [], isPostersOnByDefault) {
