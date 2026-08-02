@@ -31,7 +31,7 @@ export function extractDomain(url) {
  * @returns {boolean} true, если домен или его поддомен есть в списке правил
  * Если найдено правило с posterAllowed === false, возвращает false
  */
-export function isPosterAllowed(domain, parsingRulesList = []) {
+export function isPosterAllowed(domain, parsingRulesList = [], isPostersOnByDefault) {
     if (!domain || !Array.isArray(parsingRulesList)) return false;
 
     const normalized = domain.trim().toLowerCase().replace(/^www\./, "");
@@ -53,6 +53,6 @@ export function isPosterAllowed(domain, parsingRulesList = []) {
         return true;
     }
 
-    // Нет правил — по умолчанию false (постеры не разрешены)
-    return false;
+    // Нет правил — по умолчанию выдаем как указано в переменной окружения isPostersOnByDefault
+    return isPostersOnByDefault;
 }

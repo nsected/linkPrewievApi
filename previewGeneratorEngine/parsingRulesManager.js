@@ -18,11 +18,13 @@ export function getParsingRules(
     url,
     parsingRulesList = [],
     blockedDomains = [],        // new: список доменов для блокировки
-    whitelistMode = false       // new: режим белого списка
+    whitelistMode = false,       // new: режим белого списка
+    isPostersOnByDefault = false
 ) {
     const domain = extractDomain(url);
     const skipParsing = isFileUrl(url);
 
+    // если домен не пришел от клиента - скипаем
     if (!domain) {
         return {
             domain: null,
@@ -42,7 +44,7 @@ export function getParsingRules(
 
     const fastmode = rule?.fastmode ?? true;
     const classification = rule?.classification ?? "unknown";
-    const posterAllowed = isPosterAllowed(domain, parsingRulesList);
+    const posterAllowed = isPosterAllowed(domain, parsingRulesList, isPostersOnByDefault);
 
     // new: whitelist / blacklist логика
     let finalSkipParsing = skipParsing;

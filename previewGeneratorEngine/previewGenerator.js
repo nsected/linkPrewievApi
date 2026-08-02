@@ -18,8 +18,9 @@ export async function parseUrl(url) {
     const log = appLog.child({ namespace: "parseUrl" });
     await appLog.info({taskUrl: url, message: "🚀 Starting pipeline"})
     const blacklistMode = String(process.env.BLACKLISTMODE).toLowerCase() === "true";
-    const whitelistMode = !blacklistMode;
-    const rules = getParsingRules(url, parsingRulesList, blockedDomains, whitelistMode);
+    const whitelistMode = String(process.env.WHITELISTMODE).toLowerCase() === "true";
+    const isPostersOnByDefault = String(process.env.IS_POSTERS_ON_BY_DEFAULT).toLowerCase() === "true";
+    const rules = getParsingRules(url, parsingRulesList, blockedDomains, whitelistMode, isPostersOnByDefault);
     console.log(blacklistMode, JSON.stringify(rules))
     await appLog.info({taskUrl: url, message: `whitelistMode: ${whitelistMode} Parsing rules:`, extra: rules}  )
     if (rules.skipParsing) {
