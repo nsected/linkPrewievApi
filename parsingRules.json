@@ -222,6 +222,11 @@
     "posterAllowed": false
   },
   {
+    "domain": "2ch.org",
+    "fastmode": true,
+    "posterAllowed": false
+  },
+  {
     "domain": "yandex.com",
     "classification": "safe",
     "notes": "Yandex international/search",
