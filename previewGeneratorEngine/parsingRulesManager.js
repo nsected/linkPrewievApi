@@ -7,7 +7,6 @@ import { extractDomain, isFileUrl, isPosterAllowed } from "../utils/helpers.js";
  * @param {Array} [blockedDomains=[]] — список доменов, запрещённых к парсингу
  * @param {boolean} [whitelistMode=false] — если true, парсит только домены из parsingRulesList
  * @param {boolean} [isPostersOnByDefault=false] — если true, постеры разрешены для всех
- * @param {boolean} [isBlocked] — заблокирован ли домен
  * @returns {{
  *   domain: string|null,
  *   fastmode: boolean,
