@@ -22,13 +22,13 @@ export async function parseUrl(url) {
     const isPostersOnByDefault = String(process.env.IS_POSTERS_ON_BY_DEFAULT).toLowerCase() === "true";
     const rules = getParsingRules(url, parsingRulesList, blockedDomains, whitelistMode, isPostersOnByDefault);
     //console.log(blacklistMode, JSON.stringify(rules))
-    await appLog.info({taskUrl: url, message: `whitelistMode: ${whitelistMode} Parsing rules:`, extra: rules}  )
+    await appLog.info({taskUrl: url, message: `whitelistMode: ${whitelistMode} blacklistMode: ${blacklistMode} Parsing rules:`, extra: rules}  )
     if (rules.skipParsing) {
         return {
             message: 'Skip parsing because of rules',
             rules: rules,
             whitelistMode: whitelistMode,
-            blacklistMode: blacklistMode
+            blacklistMode: blacklistMode //заготовка. Пока всегда true
         }
     }
 
