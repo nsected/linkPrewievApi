@@ -13,7 +13,7 @@ const app = express();
 const PORT = process.env.PORT || 3002;
 
 const corsOptions = {
-  origin: "https://tv.2ch.su",
+  origin: ["https://tv.2ch.su", "https://citx.space/"],
   methods: ["GET", "OPTIONS", "POST"],
   allowedHeaders: ["Content-Type"],
 };
